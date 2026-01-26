@@ -1,0 +1,177 @@
+{% extends 'base_guest.html' %}
+{% block content %}
+<div class="min-h-screen pt-24 pb-12 px-6">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="mb-12 text-center md:text-right">
+            <h2 class="text-4xl font-black text-slate-900 mb-4">اشترك وفعل حسابك 🚀</h2>
+            <p class="text-slate-500 font-medium italic">اختر وسيلة الدفع المناسبة لك لتفعيل حسابك والبدء في التعلم
+                بذكاء</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+            <!-- Right Column: Payment Methods (Col span 2) -->
+            <div class="lg:col-span-2 space-y-8">
+                <h3 class="text-xl font-black text-slate-900 flex items-center gap-3">
+                    <span class="w-2 h-8 bg-primary rounded-full"></span>
+                    اختر وسيلة الدفع
+                </h3>
+
+                <div class="grid gap-4">
+                    <!-- Sadaad Option -->
+                    <label class="block cursor-pointer group">
+                        <input type="radio" name="payment" class="hidden peer" checked>
+                        <div
+                            class="bg-white border-2 border-slate-100 peer-checked:border-primary peer-checked:bg-primary/5 p-8 rounded-[2.5rem] flex justify-between items-center transition-all duration-300 shadow-sm hover:shadow-xl group-hover:-translate-y-1">
+                            <div class="flex items-center gap-6">
+                                <div
+                                    class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center p-3 shadow-inner group-hover:scale-110 transition-transform">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/SADAD_Logo.png"
+                                        alt="Sadaad" class="h-8 grayscale group-hover:grayscale-0 transition-all">
+                                </div>
+                                <div>
+                                    <p class="font-black text-lg text-slate-900">سداد (Sadaad)</p>
+                                    <p class="text-xs font-medium text-slate-500 mt-1 italic">دفع فوري عبر الهاتف -
+                                        الخيار الأسرع</p>
+                                </div>
+                            </div>
+                            <div
+                                class="w-8 h-8 border-2 border-slate-200 rounded-full flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
+                                <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Card Option -->
+                    <label class="block cursor-pointer group">
+                        <input type="radio" name="payment" class="hidden peer">
+                        <div
+                            class="bg-white border-2 border-slate-100 peer-checked:border-primary peer-checked:bg-primary/5 p-8 rounded-[2.5rem] flex justify-between items-center transition-all duration-300 shadow-sm hover:shadow-xl group-hover:-translate-y-1">
+                            <div class="flex items-center gap-6">
+                                <div
+                                    class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform">
+                                    💳</div>
+                                <div>
+                                    <p class="font-black text-lg text-slate-900">خدمة معاملات</p>
+                                    <p class="text-xs font-medium text-slate-500 mt-1 italic">ادفع باستخدام بطاقتك
+                                        المصرفية المحلية بكل أمان</p>
+                                </div>
+                            </div>
+                            <div
+                                class="w-8 h-8 border-2 border-slate-200 rounded-full flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
+                                <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Bank Transfer Details -->
+                <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-2 h-full bg-slate-200"></div>
+                    <h4 class="font-black text-slate-900 mb-6 flex items-center gap-3 text-lg">🏛️ تحويل مصرفي مباشر
+                    </h4>
+                    <div class="space-y-6 text-sm text-slate-600 leading-relaxed font-medium">
+                        <div
+                            class="bg-slate-50 p-6 rounded-2xl border border-slate-100 font-mono text-center text-lg text-slate-900">
+                            001-345678-0102
+                        </div>
+                        <p class="italic text-center">المصرف: مصرف الوحدة، الجمهورية، أو التجارة والتنمية</p>
+                        <div class="grid md:grid-cols-2 gap-4 mt-8">
+                            <div class="flex items-center gap-3 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                                <span class="text-primary">📸</span>
+                                <span class="text-xs">ارفق صورة من إيصال التحويل في الخطوة التالية</span>
+                            </div>
+                            <div class="flex items-center gap-3 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                                <span class="text-primary">⚡</span>
+                                <span class="text-xs">يتم تفعيل الحساب خلال 24 ساعة عمل</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Badge -->
+                <div
+                    class="flex items-center gap-4 bg-green-50 p-6 rounded-[2rem] text-green-700 text-sm font-bold border border-green-100">
+                    <div class="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-white text-xl">
+                        🛡️</div>
+                    <p>عملية دفع آمنة 100% - بياناتك مشفرة ومحمية وفقاً لأعلى المعايير المصرفية.</p>
+                </div>
+            </div>
+
+            <!-- Left Column: Summary -->
+            <div class="relative">
+                <div class="bg-slate-900 rounded-[3rem] p-10 shadow-2xl text-white sticky top-24 overflow-hidden group">
+                    <div
+                        class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700">
+                    </div>
+
+                    <div class="relative z-10">
+                        <h3 class="text-2xl font-black mb-10">ملخص الاشتراك</h3>
+
+                        <div class="space-y-6 mb-10">
+                            <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl">
+                                <span class="text-white/50 text-xs font-bold uppercase">الباقة المختارة</span>
+                                <span class="text-primary-light font-black">{{ data.package_name if data else 'باقة
+                                    نجاح' }}</span>
+                            </div>
+                            <div class="flex justify-between items-center px-2">
+                                <span class="text-white/50 text-xs font-bold uppercase">مدة الاشتراك</span>
+                                <span class="font-bold">{{ data.duration if data else 'شهر واحد' }}</span>
+                            </div>
+                            <div class="flex justify-between items-center px-2">
+                                <span class="text-white/50 text-xs font-bold uppercase">السعر الأصلي</span>
+                                <span class="line-through text-white/30">{{ data.original_price if data else '100' }}
+                                    د.ل</span>
+                            </div>
+                            <div class="flex justify-between items-center px-2">
+                                <span class="text-white/50 text-xs font-bold uppercase">خصم حصرِي</span>
+                                <span class="text-green-400 font-bold">-{{ data.discount if data else '20' }} د.ل</span>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-white/10 pt-8 mb-10">
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-lg font-bold text-white/70">الإجمالي</span>
+                                <div class="text-right">
+                                    <span class="text-5xl font-black text-white">{{ data.total if data else '80'
+                                        }}</span>
+                                    <span class="text-xs font-bold text-white/40 italic block mt-1">دينار ليبي</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            class="w-full bg-white text-slate-900 py-5 rounded-[1.5rem] font-black text-xl shadow-2xl hover:bg-slate-100 hover:-translate-y-1 active:scale-95 transition-all">
+                            تأكيد الدفع والاشتراك ←
+                        </button>
+
+                        <p
+                            class="text-[10px] text-center text-white/30 mt-8 leading-relaxed font-bold uppercase tracking-widest px-4">
+                            بالضغط على تأكيد الدفع، أنت توافق على <a href="#"
+                                class="underline hover:text-white transition-colors">شروط الخدمة</a> و <a href="#"
+                                class="underline hover:text-white transition-colors">سياسة الخصوصية</a>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Help box -->
+                <div
+                    class="mt-6 bg-white rounded-[2rem] p-6 border border-slate-100 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-xl">🤝</div>
+                        <div>
+                            <p class="font-bold text-slate-900 text-sm">تحتاج مساعدة؟</p>
+                            <p class="text-[10px] text-slate-400 font-bold italic">فريق الدعم متاح 24/7</p>
+                        </div>
+                    </div>
+                    <button class="text-primary font-black text-xs hover:underline uppercase tracking-wider">تواصل
+                        معنا</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
