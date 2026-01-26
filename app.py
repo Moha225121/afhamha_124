@@ -16,10 +16,10 @@ def about():
 def courses():
     """Render the courses page"""
     courses_list = [
-        {'id': 1, 'title': 'Mathematics', 'description': 'Basic to advanced mathematics'},
-        {'id': 2, 'title': 'Science', 'description': 'Physics, Chemistry, and Biology'},
-        {'id': 3, 'title': 'Languages', 'description': 'Arabic and English language courses'},
-        {'id': 4, 'title': 'History', 'description': 'Libyan and World History'},
+        {'id': 1, 'title': 'الرياضيات', 'description': 'دروس الرياضيات من الأساسيات إلى المستوى المتقدم'},
+        {'id': 2, 'title': 'العلوم', 'description': 'الفيزياء والكيمياء والأحياء'},
+        {'id': 3, 'title': 'اللغات', 'description': 'دورات اللغة العربية والإنجليزية'},
+        {'id': 4, 'title': 'التاريخ', 'description': 'التاريخ الليبي والعالمي'},
     ]
     return render_template('courses.html', courses=courses_list)
 
