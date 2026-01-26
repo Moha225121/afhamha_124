@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>افهمها وفهمني - المنصة التعليمية الأذكى في ليبيا</title>
+
+  <!-- Google Fonts: Outfit & Vazirmatn for Arabic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Vazirmatn:wght@300;400;700&display=swap"
+    rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#0891b2',
+              light: '#06b6d4',
+              dark: '#155e75',
+              surface: '#f0fdfa'
+            },
+            secondary: '#6366f1',
+            accent: '#f59e0b',
+            background: '#f8fafc'
+          },
+          fontFamily: {
+            sans: ['Vazirmatn', 'Outfit', 'ui-sans-serif', 'system-ui'],
+          },
+          animation: {
+            'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+            'float': 'float 6s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-20px)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .blob {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: linear-gradient(135deg, rgba(8, 145, 178, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
+      filter: blur(80px);
+      border-radius: 50%;
+      z-index: -1;
+    }
+  </style>
+</head>
+
+<body class="bg-background text-slate-900 overflow-x-hidden">
+
+  <!-- ================= HEADER ================= -->
+  <header class="fixed top-0 w-full z-50 glass">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white text-xl">🤖</div>
+        <span class="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">افهمها
+          وفهمني</span>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+        <a href="#features" class="hover:text-primary transition">المميزات</a>
+        <a href="#pricing" class="hover:text-primary transition">الأسعار</a>
+        <a href="{{ url_for('signup') }}" class="text-primary font-bold">تسجيل الدخول</a>
+      </nav>
+
+      <a href="{{ url_for('signup') }}"
+        class="bg-primary text-white px-6 py-2.5 rounded-full font-semibold hover:bg-primary-dark transition shadow-lg shadow-primary/20 hover:-translate-y-0.5 active:scale-95">
+        ابدأ الآن
+      </a>
+    </div>
+  </header>
+
+  <!-- ================= HERO ================= -->
+  <section class="relative pt-40 pb-20 overflow-hidden">
+    <div class="blob top-[-100px] left-[-100px]"></div>
+    <div class="blob bottom-[-100px] right-[-100px] opacity-50"></div>
+
+    <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+      <div class="animate-fade-in-up">
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-6">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+          </span>
+          مرحباً بك في مستقبل التعليم
+        </div>
+
+        <h1 class="text-5xl lg:text-6xl font-black leading-[1.2] mb-6 text-slate-900">
+          افهم دروسك <br>
+          <span class="text-primary italic">في ثواني </span>
+          بذكاء
+        </h1>
+
+        <p class="text-lg text-slate-600 mb-10 leading-relaxed max-w-lg">
+          أول منصة تعليمية ليبية تستخدم الذكاء الاصطناعي لشرح المنهج بلهجة ليبية بسيطة وسهلة. القراية عمرها ما كانت هكي!
+        </p>
+
+        <div class="flex flex-wrap gap-4">
+          <a href="{{ url_for('signup') }}"
+            class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-slate-800 transition shadow-xl hover:-translate-y-1 active:scale-95">
+            ابدأ رحلتك مجاناً
+          </a>
+
+          <a href="#features"
+            class="bg-white border border-slate-200 text-slate-600 px-8 py-4 rounded-2xl font-bold hover:bg-slate-50 transition hover:-translate-y-1 active:scale-95">
+            كيف تخدم المنصة؟
+          </a>
+        </div>
+
+        <div class="mt-12 flex items-center gap-4">
+          <div class="flex -space-x-3 space-x-reverse">
+            <img src="https://ui-avatars.com/api/?name=Ali&background=random"
+              class="w-10 h-10 rounded-full border-2 border-white" alt="User">
+            <img src="https://ui-avatars.com/api/?name=Sara&background=random"
+              class="w-10 h-10 rounded-full border-2 border-white" alt="User">
+            <img src="https://ui-avatars.com/api/?name=Ahmed&background=random"
+              class="w-10 h-10 rounded-full border-2 border-white" alt="User">
+          </div>
+          <p class="text-sm text-slate-500 font-medium">+1,000 طالب وطالبة يستفيدون يومياً</p>
+        </div>
+      </div>
+
+      <div class="relative animate-float">
+        <div class="absolute inset-0 bg-primary/20 blur-3xl rounded-full scale-75 animate-pulse"></div>
+        <img src="/static/images/image copy.png" class="relative w-full max-w-lg mx-auto drop-shadow-2xl"
+          alt="الذكاء الاصطناعي في التعليم">
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEATURES ================= -->
+  <section id="features" class="py-32 bg-white relative z-10">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center max-w-3xl mx-auto mb-20">
+        <h2 class="text-3xl font-bold mb-4 text-slate-900">ليش تختار افهمها وفهمني؟</h2>
+        <p class="text-slate-600 leading-relaxed">منصتنا مش مجرد دروس، هي رفيقك الذكي اللي يفهمك ويشرح لك المنهج زي ما
+          تحب.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-10">
+        <div
+          class="p-10 rounded-[2.5rem] bg-slate-50 hover:bg-primary/5 border border-transparent hover:border-primary/10 transition-all duration-300 group">
+          <div
+            class="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center text-3xl mb-8 group-hover:scale-110 transition-transform">
+            ⚡</div>
+          <h3 class="text-xl font-bold mb-4 text-slate-900">شرح فوري باللهجة الليبية</h3>
+          <p class="text-slate-600 text-sm leading-relaxed">
+            اكتب اسم الدرس وخذ شرح مفصل وواضح بالعامية الليبية اللي نفهموها كلنا، من غير تعقيد.
+          </p>
+        </div>
+
+        <div
+          class="p-10 rounded-[2.5rem] bg-slate-50 hover:bg-secondary/5 border border-transparent hover:border-secondary/10 transition-all duration-300 group">
+          <div
+            class="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center text-3xl mb-8 group-hover:scale-110 transition-transform">
+            🧠</div>
+          <h3 class="text-xl font-bold mb-4 text-slate-900">اختبر فهمك بذكاء</h3>
+          <p class="text-slate-600 text-sm leading-relaxed">
+            بعد كل شرح، الذكاء الاصطناعي يجهز لك أسئلة خاصة بيك باش تتأكد إنك فهمت كل نقطة في الدرس.
+          </p>
+        </div>
+
+        <div
+          class="p-10 rounded-[2.5rem] bg-slate-50 hover:bg-accent/5 border border-transparent hover:border-accent/10 transition-all duration-300 group">
+          <div
+            class="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center text-3xl mb-8 group-hover:scale-110 transition-transform">
+            📊</div>
+          <h3 class="text-xl font-bold mb-4 text-slate-900">تابع تقدمك وتفوقك</h3>
+          <p class="text-slate-600 text-sm leading-relaxed">
+            اجمع نقاط، تابع ساعات دراستك، وشوف كيف قعدت تتحسن يوم بعد يوم في كل المواد.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PRICING ================= -->
+  <section id="pricing" class="py-32 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center max-w-3xl mx-auto mb-20">
+        <h2 class="text-3xl font-bold mb-4 text-slate-900">خطط دراسة بسيطة وواضحة</h2>
+        <p class="text-slate-600 italic leading-relaxed">استثمر في مستقبلك اليوم.</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <!-- Monthly -->
+        <div class="relative bg-white rounded-[3rem] p-10 shadow-2xl overflow-hidden group">
+          <div
+            class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700">
+          </div>
+          <div class="relative z-10">
+            <span class="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold mb-6">الأكثر
+              طلباً</span>
+            <h3 class="text-2xl font-bold mb-2">الباقة الشهرية</h3>
+            <div class="flex items-baseline gap-2 mb-8">
+              <span class="text-5xl font-black text-slate-900">10</span>
+              <span class="text-slate-500 font-bold italic">د.ل / شهر</span>
+            </div>
+            <ul class="space-y-4 mb-10">
+              <li class="flex items-center gap-3 text-sm text-slate-600">
+                <span
+                  class="w-5 h-5 bg-primary/10 text-primary rounded-full flex items-center justify-center text-[10px]">✔</span>
+                شروحات غير محدودة لكل المواد
+              </li>
+              <li class="flex items-center gap-3 text-sm text-slate-600">
+                <span
+                  class="w-5 h-5 bg-primary/10 text-primary rounded-full flex items-center justify-center text-[10px]">✔</span>
+                اختبارات ذكية بعد كل درس
+              </li>
+              <li class="flex items-center gap-3 text-sm text-slate-600">
+                <span
+                  class="w-5 h-5 bg-primary/10 text-primary rounded-full flex items-center justify-center text-[10px]">✔</span>
+                متابعة دقيقة للأداء
+              </li>
+            </ul>
+            <a href="{{ url_for('signup') }}"
+              class="block w-full text-center bg-primary text-white py-4 rounded-2xl font-bold hover:bg-primary-dark transition shadow-lg shadow-primary/20">
+              اشترك الآن
+            </a>
+          </div>
+        </div>
+
+        <!-- Yearly -->
+        <div class="relative bg-slate-900 rounded-[3rem] p-10 shadow-2xl text-white overflow-hidden group">
+          <div
+            class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-tr-full -ml-16 -mb-16 group-hover:scale-150 transition-transform duration-700">
+          </div>
+          <div class="relative z-10">
+            <span class="inline-block px-4 py-1.5 rounded-full bg-white/10 text-white/70 text-xs font-bold mb-6">أفضل
+              قيمة</span>
+            <h3 class="text-2xl font-bold mb-2">الباقة السنوية</h3>
+            <div class="flex items-baseline gap-2 mb-8">
+              <span class="text-5xl font-black text-white">100</span>
+              <span class="text-white/50 font-bold italic">د.ل / سنة</span>
+            </div>
+            <ul class="space-y-4 mb-10 text-white/70">
+              <li class="flex items-center gap-3 text-sm">
+                <span
+                  class="w-5 h-5 bg-white/10 text-white rounded-full flex items-center justify-center text-[10px]">✔</span>
+                كل مميزات الباقة الشهرية
+              </li>
+              <li class="flex items-center gap-3 text-sm">
+                <span
+                  class="w-5 h-5 bg-white/10 text-white rounded-full flex items-center justify-center text-[10px]">✔</span>
+                توفير شهرين مجاناً
+              </li>
+              <li class="flex items-center gap-3 text-sm">
+                <span
+                  class="w-5 h-5 bg-white/10 text-white rounded-full flex items-center justify-center text-[10px]">✔</span>
+                أولوية في الدعم الفني
+              </li>
+            </ul>
+            <a href="{{ url_for('signup') }}"
+              class="block w-full text-center bg-white text-slate-900 py-4 rounded-2xl font-bold hover:bg-slate-100 transition shadow-lg">
+              اشترك ووفر
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CTA ================= -->
+  <section class="py-24 relative overflow-hidden">
+    <div class="max-w-4xl mx-auto px-6">
+      <div
+        class="bg-gradient-to-br from-primary to-secondary rounded-[3.5rem] p-12 lg:p-20 text-center text-white relative overflow-hidden shadow-2xl">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
+        <div class="relative z-10">
+          <h2 class="text-4xl lg:text-5xl font-black mb-6">جاهز تبدأ رحلة النجاح؟</h2>
+          <p class="text-lg text-white/80 mb-12 max-w-lg mx-auto leading-relaxed">سجل اليوم وخلي الذكاء الاصطناعي يشرح
+            لك دروسك بطريقة ما تنساش.</p>
+          <a href="{{ url_for('signup') }}"
+            class="bg-white text-primary px-12 py-5 rounded-2xl font-black text-xl hover:bg-slate-50 transition shadow-2xl hover:-translate-y-1 active:scale-95">
+            سجل حسابك مجاناً
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="py-12 border-t border-slate-100">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 bg-slate-200 rounded flex items-center justify-center text-xs">🤖</div>
+        <span class="font-bold text-slate-400 italic">افهمها وفهمني © 2026</span>
+      </div>
+      <div class="flex gap-8 text-sm text-slate-400">
+        <a href="#" class="hover:text-primary transition">سياسة الخصوصية</a>
+        <a href="#" class="hover:text-primary transition">شروط الخدمة</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+
+</html>

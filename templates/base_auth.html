@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>افهمها وفهمني - لوحة التحكم</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Vazirmatn:wght@300;400;700&display=swap"
+    rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#0891b2',
+              light: '#06b6d4',
+              dark: '#155e75',
+              surface: '#f0fdfa'
+            },
+            secondary: '#6366f1',
+            accent: '#f59e0b',
+            background: '#f8fafc'
+          },
+          fontFamily: {
+            sans: ['Outfit', 'Vazirmatn', 'ui-sans-serif', 'system-ui'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Vazirmatn', 'Outfit', sans-serif;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .sidebar-link-active {
+      background-color: #0891b2;
+      color: white;
+      box-shadow: 0 10px 15px -3px rgba(8, 145, 178, 0.2);
+    }
+
+    .mobile-sidebar-open {
+      transform: translateX(0) !important;
+    }
+  </style>
+</head>
+
+<body class="bg-[#f1f5f9] text-slate-900">
+
+  <!-- Mobile Top Bar -->
+  <header
+    class="lg:hidden bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 fixed top-0 w-full z-50 px-6 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white text-lg">🤖</div>
+      <span class="font-black text-slate-900 text-sm">افهمها وفهمني</span>
+    </div>
+    <button onclick="toggleSidebar()" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+      </svg>
+    </button>
+  </header>
+
+  <div class="flex min-h-screen">
+
+    <!-- Overlay -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()"
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 hidden lg:hidden transition-all duration-300"></div>
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside id="sidebar"
+      class="w-72 bg-white/80 backdrop-blur-md border-l border-slate-200 p-6 flex flex-col fixed h-full z-40 transition-all duration-300 -translate-x-full lg:translate-x-0">
+      <div class="flex items-center gap-3 mb-10 px-2">
+        <div
+          class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-2xl shadow-lg shadow-primary/30">
+          🤖
+        </div>
+        <h2 class="text-xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+          افهمها وفهمني
+        </h2>
+      </div>
+
+      <nav class="space-y-2 flex-1">
+        <a href="{{ url_for('dashboard') }}"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-600 hover:bg-primary-surface hover:text-primary active:scale-95 group">
+          <span class="text-xl group-hover:scale-110 transition-transform">🏠</span>
+          <span class="font-medium">الرئيسية</span>
+        </a>
+        <a href="{{ url_for('ai_room') }}"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-600 hover:bg-primary-surface hover:text-primary active:scale-95 group">
+          <span class="text-xl group-hover:scale-110 transition-transform">✨</span>
+          <span class="font-medium">غرفة الذكاء</span>
+        </a>
+        <a href="{{ url_for('my_explanations') }}"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-600 hover:bg-primary-surface hover:text-primary active:scale-95 group">
+          <span class="text-xl group-hover:scale-110 transition-transform">📚</span>
+          <span class="font-medium">شروحاتي</span>
+        </a>
+      </nav>
+
+      <div class="mt-auto pt-6 border-t border-slate-100">
+        <a href="{{ url_for('logout') }}"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-red-500 hover:bg-red-50 active:scale-95 group">
+          <span class="text-xl group-hover:rotate-12 transition-transform">🚪</span>
+          <span class="font-medium">خروج</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ================= CONTENT ================= -->
+    <main class="flex-1 lg:mr-72 p-6 lg:p-8 transition-all duration-300 mt-16 lg:mt-0 overflow-x-hidden">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('mobile-sidebar-open');
+      overlay.classList.toggle('hidden');
+    }
+  </script>
+
+</body>
+
+</html>

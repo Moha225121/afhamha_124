@@ -1,0 +1,474 @@
+{% extends "base_auth.html" %}
+{% block content %}
+
+<div class="max-w-7xl mx-auto h-auto lg:h-[calc(100vh-120px)] flex flex-col lg:flex-row gap-6 lg:gap-8">
+
+  <!-- ================= LEFT SIDEBAR (History) ================= -->
+  <aside class="w-full lg:w-80 flex flex-col gap-6 order-2 lg:order-1">
+    <div
+      class="bg-white rounded-[2rem] p-6 shadow-sm flex flex-col h-[400px] lg:h-full overflow-hidden border border-slate-50">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="font-black text-slate-900 flex items-center gap-2">
+          <span class="text-xl">💬</span> الشروحات السابقة
+        </h3>
+      </div>
+
+      <div id="history" class="space-y-3 overflow-y-auto flex-1 pr-1 custom-scrollbar">
+        <div class="animate-pulse space-y-3">
+          <div class="h-16 bg-slate-50 rounded-2xl"></div>
+          <div class="h-16 bg-slate-50 rounded-2xl"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Card -->
+    <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-50">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-2xl">💎</div>
+        <div>
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">رصيدك الحالي</p>
+          <p class="text-xl font-black text-slate-900">{{ current_user.ai_credits }} <span
+              class="text-xs text-slate-400">نقطة</span></p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN CHAT AREA ================= -->
+  <main
+    class="w-full lg:flex-1 h-[600px] lg:h-full flex flex-col bg-white rounded-[2.5rem] shadow-sm overflow-hidden border border-slate-100 relative order-1 lg:order-2">
+
+    <!-- Chat Header -->
+    <div
+      class="px-6 lg:px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-white/80 backdrop-blur-md z-10">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-xl">✨</div>
+        <div>
+          <h3 class="font-bold text-slate-900 text-sm lg:text-base" id="currentSubjectDisplay">غرفة الذكاء الاصطناعي
+          </h3>
+          <p class="text-[9px] lg:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">مدرسك الليبي
+            الذكي متصل الآن
+          </p>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="window.print()" class="p-2 hover:bg-slate-50 rounded-lg text-slate-400 transition"
+          title="طباعة الشرح">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor font-bold">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Chat Messages -->
+    <div id="chatMessages" class="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6 custom-scrollbar bg-slate-50/30">
+      <!-- Welcome Message -->
+      <div class="flex gap-4">
+        <div class="w-8 h-8 bg-primary rounded-lg flex-shrink-0 flex items-center justify-center text-white text-sm">🤖
+        </div>
+        <div
+          class="bg-white p-5 rounded-[2rem] rounded-tr-none shadow-sm border border-slate-100 max-w-[90%] lg:max-w-[80%]">
+          <p class="text-sm text-slate-600 leading-relaxed">
+            مرحباً بيك في غرفة الذكاء الاصطناعي! 👋 <br><br>
+            اختار المادة اللي تبيها من فوق، واكتب اسم الدرس أو السؤال اللي تبي تفهمه، وأنا حنشرحهولك باللهجة الليبية
+            ونجهزلك أسئلة تختبر بيهم فهمك. <br><br>
+            <strong>شن تبي تشرح اليوم؟</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay"
+      class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-20 hidden items-center justify-center">
+      <div
+        class="bg-white p-6 rounded-3xl shadow-2xl flex flex-col items-center gap-4 text-center border border-slate-100 animate-in fade-in zoom-in duration-300 mx-6">
+        <div class="relative w-16 h-16">
+          <div class="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
+          <div class="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <div>
+          <p class="font-black text-slate-800">جاري التحليل والشرح...</p>
+          <p class="text-xs text-slate-400 mt-1 italic">مدرسك الذكي يجهز في الرد</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="p-4 lg:p-6 bg-white border-t border-slate-100">
+      <div class="flex gap-3 lg:gap-4 mb-3 lg:mb-4">
+        <div class="flex-1 relative">
+          <select id="subject" onchange="updateSubjectDisplay()"
+            class="w-full pl-8 lg:pl-10 pr-4 py-2.5 lg:py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-bold text-slate-700 appearance-none cursor-pointer text-xs lg:text-sm">
+            {% for s in subjects %}
+            <option value="{{ s }}" {% if request.args.get('subject')==s %}selected{% endif %}>📚 {{ s }}</option>
+            {% endfor %}
+          </select>
+          <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="relative flex items-center">
+        <input id="question" type="text" placeholder="اكتب اسم الدرس هنا..."
+          onkeypress="if(event.key === 'Enter') askAI()"
+          class="w-full pl-16 lg:pl-20 pr-4 lg:pr-6 py-3.5 lg:py-4 bg-slate-900 text-white rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all font-medium placeholder:text-slate-500 text-sm">
+
+        <button id="askBtn" onclick="askAI()"
+          class="absolute left-1.5 px-4 lg:px-6 py-2 lg:py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-all active:scale-95 flex items-center gap-2 shadow-lg shadow-primary/20 text-xs lg:text-sm">
+          <span class="hidden sm:inline">اسأل</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+      <p class="text-[8px] lg:text-[10px] text-center mt-3 text-slate-400 font-bold uppercase tracking-widest">ملاحظة:
+        سيتم استهلاك 5 نقاط من رصيدك لكل شرح</p>
+    </div>
+
+  </main>
+
+  <!-- ================= RIGHT SIDEBAR (Quiz) ================= -->
+  <aside class="w-full lg:w-80 flex flex-col order-3">
+    <div id="quizContainer"
+      class="bg-white rounded-[2rem] p-6 shadow-sm flex-1 flex flex-col min-h-[400px] lg:h-full lg:overflow-hidden border border-slate-50 relative">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center text-xl">📝</div>
+        <h3 class="font-black text-slate-900">اختبر فهمك</h3>
+      </div>
+
+      <div id="quiz" class="flex-1 lg:overflow-y-auto pr-1 custom-scrollbar space-y-8">
+        <div class="flex flex-col items-center justify-center h-48 lg:h-full text-center p-6 grayscale opacity-40">
+          <div class="text-5xl mb-4">⌛</div>
+          <p class="text-sm font-bold text-slate-500">الأسئلة حتطلع هنا بعد ما يكمل الشرح</p>
+        </div>
+      </div>
+
+      <div id="quizFooter" class="mt-6 pt-6 border-t border-slate-50 hidden">
+        <button onclick="checkAnswers()"
+          class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200">
+          تحقق من الإجابات
+        </button>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- ================= RESULT MODAL ================= -->
+<div id="resultModal"
+  class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-6 animate-in fade-in duration-300">
+  <div
+    class="bg-white rounded-[3rem] p-10 w-full max-w-sm text-center shadow-2xl scale-in-center border border-slate-100">
+    <div id="modalIcon" class="text-7xl mb-6">🎉</div>
+    <h3 id="modalTitle" class="text-3xl font-black mb-2 text-slate-900"></h3>
+    <p id="modalMessage" class="text-slate-500 font-medium mb-10"></p>
+    <button onclick="closeModal()"
+      class="w-full bg-primary text-white py-4 rounded-2xl font-black text-lg hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 active:scale-95">
+      تمام، استمـر 🚀
+    </button>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  let correctAnswers = [];
+
+  function updateSubjectDisplay() {
+    const select = document.getElementById("subject");
+    const display = document.getElementById("currentSubjectDisplay");
+    display.innerText = "شرح: " + select.value;
+  }
+
+  function setLoading(state) {
+    const overlay = document.getElementById("loadingOverlay");
+    const btn = document.getElementById("askBtn");
+
+    if (state) {
+      overlay.classList.remove("hidden");
+      overlay.classList.add("flex");
+      btn.disabled = true;
+      btn.classList.add("opacity-50");
+    } else {
+      overlay.classList.remove("flex");
+      overlay.classList.add("hidden");
+      btn.disabled = false;
+      btn.classList.remove("opacity-50");
+    }
+  }
+
+  /* ================= LOAD HISTORY ================= */
+  function loadHistory() {
+    fetch("/api/explanations")
+      .then(r => r.json())
+      .then(data => {
+        const box = document.getElementById("history");
+        box.innerHTML = "";
+        if (!data.length) {
+          box.innerHTML = "<p class='text-slate-400 text-xs text-center font-bold font-italic py-10 opacity-60'>ما فيش شروحات بعد</p>";
+          return;
+        }
+        data.forEach(item => {
+          const div = document.createElement("div");
+          div.onclick = () => showHistoryItem(item);
+          div.className = "cursor-pointer bg-slate-50 hover:bg-primary/5 hover:border-primary/20 border border-transparent rounded-2xl p-4 transition-all group";
+          div.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="text-xl group-hover:scale-110 transition-transform">📚</span>
+            <div class="flex-1 overflow-hidden">
+               <strong class="text-sm text-slate-800 block truncate group-hover:text-primary transition-colors">${item.title}</strong>
+               <p class="text-[10px] text-slate-400 font-bold italic mt-0.5">${item.date}</p>
+            </div>
+          </div>`;
+          box.appendChild(div);
+        });
+      });
+  }
+
+  function showHistoryItem(item) {
+    addMessage("🤖", item.content, "bot");
+    document.getElementById("quiz").innerHTML = `
+    <div class="flex flex-col items-center justify-center h-full text-center p-6 grayscale opacity-40">
+      <div class="text-5xl mb-4">🔎</div>
+      <p class="text-sm font-bold text-slate-500 italic">هذا شرح قديم، الأسئلة مش محفوظة حالياً.</p>
+    </div>`;
+    document.getElementById("quizFooter").classList.add("hidden");
+  }
+
+  function addMessage(sender, content, type) {
+    const chatMessages = document.getElementById("chatMessages");
+    const div = document.createElement("div");
+    div.className = `flex gap-4 animate-in slide-in-from-bottom-4 duration-500 opacity-0 fill-mode-forwards`;
+    div.style.opacity = "1"; // In case animate-in doesn't work perfectly
+
+    const icon = type === "bot" ? "🤖" : "👤";
+    const bgClass = type === "bot" ? "bg-white rounded-[2rem] rounded-tr-none shadow-sm border border-slate-100" : "bg-primary text-white rounded-[2rem] rounded-tl-none mr-auto ml-0 shadow-lg shadow-primary/10";
+    const textClass = type === "bot" ? "text-slate-700" : "text-white";
+
+    const htmlContent = type === "bot" ? marked.parse(content) : content;
+
+    div.innerHTML = `
+    ${type === "bot" ? `<div class="w-8 h-8 bg-primary rounded-lg flex-shrink-0 flex items-center justify-center text-white text-sm">${icon}</div>` : ""}
+    <div class="${bgClass} p-5 max-w-[85%]">
+      <div class="prose prose-sm ${textClass} max-w-none leading-relaxed prose-p:mb-4 last:prose-p:mb-0">
+        ${htmlContent}
+      </div>
+    </div>
+    ${type === "user" ? `<div class="w-8 h-8 bg-slate-900 rounded-lg flex-shrink-0 flex items-center justify-center text-white text-sm">${icon}</div>` : ""}
+  `;
+
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  /* ================= ASK AI ================= */
+  function askAI() {
+    const query = document.getElementById("question").value.trim();
+    const subject = document.getElementById("subject").value;
+
+    if (!query) return;
+
+    addMessage("👤", query, "user");
+    document.getElementById("question").value = "";
+    setLoading(true);
+
+    fetch("/ai-room", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subject, query })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) {
+          addMessage("🤖", "عفواً: " + data.error, "bot");
+          return;
+        }
+
+        addMessage("🤖", data.explanation, "bot");
+        loadHistory();
+
+        let quizHtml = "";
+        correctAnswers = [];
+
+        data.quiz.forEach((q, i) => {
+          correctAnswers.push(q.correct);
+          quizHtml += `
+        <div class="group bg-slate-50 rounded-[2rem] p-6 border border-slate-100/50 hover:bg-white hover:border-accent/20 transition-all duration-300">
+          <div class="flex gap-3 mb-4">
+            <span class="w-6 h-6 bg-accent/10 text-accent rounded-full flex items-center justify-center text-[10px] font-black">${i + 1}</span>
+            <strong class="text-sm text-slate-800 leading-snug font-black">${q.question}</strong>
+          </div>
+          <div class="space-y-2 mr-9">`;
+
+          q.options.forEach((op, idx) => {
+            const id = `q${i}_${idx}`;
+            quizHtml += `
+          <label for="${id}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200/50 hover:bg-white hover:border-primary/30 cursor-pointer transition-all group/option active:scale-[0.98]">
+            <input type="radio" id="${id}" name="q${i}" value="${idx}" class="w-4 h-4 text-primary focus:ring-primary border-slate-300">
+            <span class="text-xs font-bold text-slate-600 group-hover/option:text-slate-900 transition-colors">${op}</span>
+          </label>`;
+          });
+          quizHtml += `</div></div>`;
+        });
+
+        if (data.quiz.length) {
+          document.getElementById("quizFooter").classList.remove("hidden");
+        } else {
+          quizHtml = `
+        <div class="flex flex-col items-center justify-center h-full text-center p-6 grayscale opacity-40">
+          <div class="text-5xl mb-4">🤷‍♂️</div>
+          <p class="text-sm font-bold text-slate-500 italic">ما قدرتش نجهز أسئلة للموضوع هذا، جرب موضوع ثاني.</p>
+        </div>`;
+        }
+
+        const quizBox = document.getElementById("quiz");
+        quizBox.style.opacity = "0";
+        setTimeout(() => {
+          quizBox.innerHTML = quizHtml;
+          quizBox.style.opacity = "1";
+        }, 300);
+      })
+      .catch(err => {
+        addMessage("🤖", "صار خطأ في الاتصال بالذكاء الاصطناعي. جرب مرة ثانية.", "bot");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }
+
+  /* ================= CHECK ================= */
+  function checkAnswers() {
+    let score = 0;
+    let total = correctAnswers.length;
+
+    correctAnswers.forEach((c, i) => {
+      const sel = document.querySelector(`input[name="q${i}"]:checked`);
+      if (sel && parseInt(sel.value) === c) score++;
+
+      // Highlight correct/incorrect
+      const allOptions = document.querySelectorAll(`input[name="q${i}"]`);
+      allOptions.forEach((inp, idx) => {
+        const parent = inp.closest("label");
+        if (idx === c) {
+          parent.classList.add("bg-green-50", "border-green-200");
+          parent.classList.remove("border-slate-200/50");
+        } else if (inp.checked && idx !== c) {
+          parent.classList.add("bg-red-50", "border-red-200");
+          parent.classList.remove("border-slate-200/50");
+        }
+      });
+    });
+
+    const icon = document.getElementById("modalIcon");
+    const title = document.getElementById("modalTitle");
+    const msg = document.getElementById("modalMessage");
+
+    if (score === total) {
+      icon.innerText = "🎉";
+      title.innerText = "ممتاز جداً!";
+      msg.innerText = `علاّمة فعلاً! جاوبت على كل الأسئلة (${score}/${total}) صح. استمر في التألق! 🚀`;
+    } else if (score >= total / 2) {
+      icon.innerText = "👍";
+      title.innerText = "كويس هلبة!";
+      msg.innerText = `جاوبت على ${score} من ${total} صح. راجع الأخطاء باش تثبت المعلومة في راسك.`;
+    } else {
+      icon.innerText = "💪";
+      title.innerText = "حاول مرة ثانية!";
+      msg.innerText = `جبت ${score} من ${total}. ما تستسلمش، عاود اقرأ الشرح وحاول مرة ثانية حتلقى روحك أحسن!`;
+    }
+
+    document.getElementById("resultModal").classList.remove("hidden");
+    document.getElementById("resultModal").classList.add("flex");
+  }
+
+  function closeModal() {
+    document.getElementById("resultModal").classList.add("hidden");
+    document.getElementById("resultModal").classList.remove("flex");
+  }
+
+  loadHistory();
+  updateSubjectDisplay();
+</script>
+
+<style>
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+  }
+
+  @media print {
+    aside {
+      display: none !important;
+    }
+
+    main {
+      border: none !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      width: 100% !important;
+      height: auto !important;
+    }
+
+    #chatMessages {
+      overflow: visible !important;
+      height: auto !important;
+    }
+
+    .bg-slate-900,
+    .bg-primary {
+      color: black !important;
+      background: white !important;
+      border: 1px solid #ddd !important;
+    }
+
+    .text-white {
+      color: black !important;
+    }
+
+    nav,
+    header,
+    footer,
+    .p-6.bg-white.border-t {
+      display: none !important;
+    }
+  }
+
+  .scale-in-center {
+    animation: scale-in-center 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  }
+
+  @keyframes scale-in-center {
+    0% {
+      transform: scale(0.5);
+      opacity: 0;
+    }
+
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+</style>
+
+{% endblock %}

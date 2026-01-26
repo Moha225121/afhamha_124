@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أفهمها وفهمني - الدخول</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Vazirmatn:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: '#0891b2',
+                            light: '#06b6d4',
+                            dark: '#155e75',
+                        },
+                        secondary: '#6366f1',
+                        accent: '#f59e0b',
+                        background: '#0d1b2a'
+                    },
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'Outfit', 'ui-sans-serif', 'system-ui'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: radial-gradient(circle at top right, #1e293b 0%, #0f172a 100%);
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .input-field {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            backdrop-filter: blur(5px);
+        }
+
+        .input-field:focus {
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.08);
+            border-color: rgba(8, 145, 178, 0.5);
+            box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.1);
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        select.input-field option {
+            background-color: #0f172a;
+            color: white;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-6">
+
+    <div class="w-full max-w-[440px]">
+
+        <!-- Logo -->
+        <div class="flex flex-col items-center mb-10">
+            <div
+                class="w-16 h-16 bg-primary rounded-3xl flex items-center justify-center text-white text-4xl shadow-2xl shadow-primary/40 mb-4 animate-bounce">
+                🤖
+            </div>
+            <h1 class="text-3xl font-black text-white px-2">افهمها وفهمني</h1>
+            <p class="text-slate-400 font-medium mt-2">مستقبلك يبدأ من هنا</p>
+        </div>
+
+        <div class="glass p-8 rounded-[3rem] shadow-2xl">
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div
+                class="bg-red-500/10 border border-red-500/20 text-red-200 p-4 rounded-2xl mb-6 text-sm text-center font-bold">
+                {{ messages[0] }}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="flex bg-black/20 p-1.5 rounded-2xl mb-8">
+                <button onclick="toggle(true)" id="sBtn"
+                    class="flex-1 py-3 bg-primary text-white rounded-[1.25rem] font-bold transition-all shadow-lg shadow-primary/20">إنشاء
+                    حساب</button>
+                <button onclick="toggle(false)" id="lBtn"
+                    class="flex-1 py-3 text-slate-400 font-bold hover:text-white transition-all">تسجيل الدخول</button>
+            </div>
+
+            <!-- Signup Form -->
+            <form id="sForm" action="/signup" method="POST" class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500 mr-2 uppercase tracking-widest">الاسم الكامل</label>
+                    <input name="full_name" required placeholder="مثلاً: محمد علي" class="input-field">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500 mr-2 uppercase tracking-widest">رقم الهاتف</label>
+                    <input name="phone" required placeholder="09X XXXXXXX" class="input-field" dir="ltr">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500 mr-2 uppercase tracking-widest">السنة
+                        الدراسية</label>
+                    <select name="study_year" required class="input-field appearance-none cursor-pointer">
+                        <option value="" disabled selected>اختر سنتك الدراسية</option>
+                        <option>أولى إعدادي</option>
+                        <option>ثانية إعدادي</option>
+                        <option>ثالثة إعدادي</option>
+                        <option>أولى ثانوي عام</option>
+                        <option>ثانية ثانوي علمي</option>
+                        <option>ثانية ثانوي أدبي</option>
+                        <option>ثالثة ثانوي علمي</option>
+                        <option>ثالثة ثانوي أدبي</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500 mr-2 uppercase tracking-widest">كلمة المرور</label>
+                    <input name="password" type="password" required placeholder="••••••••" class="input-field">
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-primary text-white py-5 rounded-[1.5rem] font-black text-lg hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 active:scale-95 mt-4">
+                    انضم الآن
+                </button>
+            </form>
+
+            <!-- Login Form -->
+            <form id="lForm" action="/login" method="POST" class="space-y-4 hidden">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500 mr-2 uppercase tracking-widest">رقم الهاتف</label>
+                    <input name="phone" required placeholder="09X XXXXXXX" class="input-field" dir="ltr">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-500 mr-2 uppercase tracking-widest">كلمة المرور</label>
+                    <input name="password" type="password" required placeholder="••••••••" class="input-field">
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-white text-slate-900 py-5 rounded-[1.5rem] font-black text-lg hover:bg-slate-100 transition-all shadow-xl active:scale-95 mt-4">
+                    دخول للمنصة
+                </button>
+            </form>
+        </div>
+
+        <p class="text-center text-slate-500 text-sm mt-8 font-medium">
+            بالتسجيل أنت توافق على <a href="#" class="text-primary hover:underline">شروطنا</a>
+        </p>
+    </div>
+
+    <script>
+        function toggle(isS) {
+            const sForm = document.getElementById('sForm');
+            const lForm = document.getElementById('lForm');
+            const sBtn = document.getElementById('sBtn');
+            const lBtn = document.getElementById('lBtn');
+
+            sForm.classList.toggle('hidden', !isS);
+            lForm.classList.toggle('hidden', isS);
+
+            if (isS) {
+                sBtn.className = 'flex-1 py-3 bg-primary text-white rounded-[1.25rem] font-bold transition-all shadow-lg shadow-primary/20';
+                lBtn.className = 'flex-1 py-3 text-slate-400 font-bold hover:text-white transition-all';
+            } else {
+                lBtn.className = 'flex-1 py-3 bg-white text-slate-900 rounded-[1.25rem] font-bold transition-all shadow-lg';
+                sBtn.className = 'flex-1 py-3 text-slate-400 font-bold hover:text-white transition-all';
+            }
+        }
+    </script>
+</body>
+
+</html>

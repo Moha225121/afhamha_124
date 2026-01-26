@@ -1,0 +1,237 @@
+{% extends "base_auth.html" %}
+{% block content %}
+
+<div class="max-w-6xl mx-auto py-4">
+
+  <!-- ================= HEADER ================= -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+    <div>
+      <h2 class="text-3xl font-black text-slate-900 mb-2">📚 شروحاتي السابقة</h2>
+      <p class="text-slate-500 font-medium italic">هنا حتلقى كل الشروحات اللي فاتوا، مخزنين باش ترجعلهم في أي وقت.</p>
+    </div>
+
+    <a href="{{ url_for('ai_room') }}"
+      class="inline-flex items-center gap-3 bg-primary text-white px-8 py-3 rounded-2xl font-bold hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 active:scale-95 group">
+      <span>شرح جديد</span>
+      <span class="group-hover:scale-110 transition-transform">✨</span>
+    </a>
+  </div>
+
+  <!-- ================= GRID ================= -->
+  {% if explanations %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+    {% for exp in explanations %}
+    <div
+      onclick="openModal(`{{ exp.title|e }}`, `{{ exp.content|e }}`, `{{ exp.created_at.strftime('%Y-%m-%d %H:%M') }}`)"
+      class="group relative bg-white rounded-[2.5rem] p-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border border-slate-50 cursor-pointer overflow-hidden">
+
+      <div
+        class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-[4rem] group-hover:scale-150 transition-transform duration-700">
+      </div>
+
+      <div class="relative z-10">
+        <div class="flex items-center justify-between mb-6">
+          <div
+            class="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-2xl shadow-inner group-hover:bg-primary group-hover:text-white transition-colors">
+            📖
+          </div>
+          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{
+            exp.created_at.strftime('%Y-%m-%d') }}</span>
+        </div>
+
+        <h3
+          class="font-black text-slate-900 mb-4 line-clamp-2 leading-relaxed group-hover:text-primary transition-colors">
+          {{ exp.title }}
+        </h3>
+
+        <div class="text-sm text-slate-500 line-clamp-3 mb-8 leading-relaxed italic">
+          {{ exp.content }}
+        </div>
+
+        <div class="flex items-center justify-between mt-auto">
+          <span class="text-xs font-bold text-primary group-hover:underline">عرض الشرح كامل ←</span>
+          <div class="text-[10px] text-slate-300 font-bold uppercase">{{ exp.created_at.strftime('%H:%M') }}</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+
+  {% else %}
+  <!-- EMPTY STATE -->
+  <div class="bg-white rounded-[3rem] p-20 text-center border border-dashed border-slate-200 shadow-inner">
+    <div
+      class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center text-5xl mx-auto mb-8 grayscale opacity-50">
+      📭</div>
+    <h3 class="text-2xl font-black text-slate-900 mb-2">ما فيش شروحات بعد</h3>
+    <p class="text-slate-500 font-medium italic mb-10 max-w-sm mx-auto leading-relaxed">
+      ابدأ رحلة التعلم توة، وأول شرح تديره حتلقاه متخزن هنا في مكتبتك الخاصة.
+    </p>
+    <a href="{{ url_for('ai_room') }}"
+      class="inline-block bg-slate-900 text-white px-10 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl active:scale-95">
+      ابدأ أول شرح بذكاء 🤖
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- ================= VIEW MODAL ================= -->
+<div id="viewModal"
+  class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-6 animate-in fade-in duration-300">
+
+  <div
+    class="bg-white rounded-[3rem] w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl scale-in-center border border-slate-100 overflow-hidden">
+
+    <!-- Modal Header -->
+    <div class="px-10 py-8 border-b border-slate-50 flex justify-between items-center bg-white/80 backdrop-blur-md">
+      <div>
+        <div class="flex items-center gap-3 mb-1">
+          <span class="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center text-sm">📖</span>
+          <h3 id="modalTitle" class="font-black text-xl text-slate-900"></h3>
+        </div>
+        <p id="modalDate" class="text-xs font-bold text-slate-400 italic mr-11"></p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="window.print()" class="p-3 hover:bg-slate-50 rounded-2xl text-slate-400 transition"
+          title="طباعة">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+        </button>
+        <button onclick="closeModal()"
+          class="p-3 hover:bg-red-50 rounded-2xl text-slate-400 hover:text-red-500 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Content -->
+    <div id="modalContent" class="flex-1 overflow-y-auto px-10 py-10 custom-scrollbar bg-slate-50/20">
+      <div class="prose prose-slate max-w-none text-slate-700 leading-relaxed font-medium markdown-content">
+        <!-- Rendered with Marked.js -->
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-10 py-6 bg-slate-50 border-t border-slate-100 flex justify-end">
+      <button onclick="closeModal()"
+        class="px-8 py-3 bg-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-300 transition-all active:scale-95">
+        إغلاق
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  function openModal(title, content, date) {
+    document.getElementById("modalTitle").innerText = title;
+    document.getElementById("modalDate").innerText = date;
+
+    const contentBox = document.querySelector(".markdown-content");
+    contentBox.innerHTML = marked.parse(content);
+
+    const modal = document.getElementById("viewModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+
+  function closeModal() {
+    const modal = document.getElementById("viewModal");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+
+  // Close on escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+</script>
+
+<style>
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+  }
+
+  .scale-in-center {
+    animation: scale-in-center 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  }
+
+  @keyframes scale-in-center {
+    0% {
+      transform: scale(0.5);
+      opacity: 0;
+    }
+
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+
+    #viewModal,
+    #viewModal * {
+      visibility: visible;
+    }
+
+    #viewModal {
+      position: absolute;
+      left: 0;
+      top: 0;
+      background: white !important;
+      display: block !important;
+      padding: 0 !important;
+    }
+
+    .bg-slate-900/60 {
+      display: none !important;
+    }
+
+    .max-w-3xl {
+      max-width: 100% !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    .modal-footer,
+    .p-3,
+    button {
+      display: none !important;
+    }
+
+    #modalContent {
+      overflow: visible !important;
+      height: auto !important;
+    }
+  }
+</style>
+
+{% endblock %}
