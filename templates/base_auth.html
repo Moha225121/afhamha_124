@@ -54,9 +54,7 @@
       box-shadow: 0 10px 15px -3px rgba(8, 145, 178, 0.2);
     }
 
-    .mobile-sidebar-open {
-      transform: translateX(0) !important;
-    }
+
   </style>
 </head>
 
@@ -81,11 +79,11 @@
 
     <!-- Overlay -->
     <div id="sidebarOverlay" onclick="toggleSidebar()"
-      class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 hidden lg:hidden transition-all duration-300"></div>
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 hidden lg:hidden transition-opacity duration-300"></div>
 
     <!-- ================= SIDEBAR ================= -->
     <aside id="sidebar"
-      class="w-72 bg-white/80 backdrop-blur-md border-l border-slate-200 p-6 flex flex-col fixed h-full z-40 transition-all duration-300 -translate-x-full lg:translate-x-0">
+      class="w-72 bg-white/80 backdrop-blur-md border-l border-slate-200 p-6 flex flex-col fixed h-full z-40 transition-all duration-300 hidden lg:block">
       <div class="flex items-center gap-3 mb-10 px-2">
         <div
           class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-2xl shadow-lg shadow-primary/30">
@@ -134,7 +132,11 @@
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('sidebarOverlay');
-      sidebar.classList.toggle('mobile-sidebar-open');
+      
+      // Toggle sidebar visibility
+      sidebar.classList.toggle('hidden');
+      
+      // Toggle overlay visibility
       overlay.classList.toggle('hidden');
     }
   </script>
