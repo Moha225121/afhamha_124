@@ -61,6 +61,19 @@ try:
         else:
             print("✓ Column 'subject' already exists in explanation table")
         
+        # Migration 3: Add created_at to explanation table
+        if not column_exists(conn, 'explanation', 'created_at'):
+            print("Adding 'created_at' column to explanation table...")
+            conn.execute(text("""
+                ALTER TABLE explanation 
+                ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+            """))
+            conn.commit()
+            print("✓ Added created_at column")
+            migrations_run += 1
+        else:
+            print("✓ Column 'created_at' already exists in explanation table")
+        
         if migrations_run > 0:
             print(f"\n✓ Migration completed! {migrations_run} column(s) added.")
         else:
