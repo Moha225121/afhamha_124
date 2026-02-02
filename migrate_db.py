@@ -74,6 +74,40 @@ try:
         else:
             print("✓ Column 'created_at' already exists in explanation table")
         
+        # Migration 4: Create lesson table if it doesn't exist
+        if is_postgres:
+            table_check = conn.execute(text("""
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'lesson'
+                );
+            """))
+            table_exists = table_check.scalar()
+        else:
+            table_check = conn.execute(text("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='lesson';
+            """))
+            table_exists = table_check.fetchone() is not None
+        
+        if not table_exists:
+            print("Creating 'lesson' table...")
+            conn.execute(text("""
+                CREATE TABLE lesson (
+                    id SERIAL PRIMARY KEY,
+                    study_year VARCHAR(50) NOT NULL,
+                    subject VARCHAR(100) NOT NULL,
+                    category VARCHAR(100),
+                    lesson_name VARCHAR(255) NOT NULL,
+                    description TEXT
+                );
+            """))
+            conn.commit()
+            print("✓ Created lesson table")
+            migrations_run += 1
+        else:
+            print("✓ Table 'lesson' already exists")
+        
         if migrations_run > 0:
             print(f"\n✓ Migration completed! {migrations_run} column(s) added.")
         else:
