@@ -139,6 +139,14 @@ class Explanation(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
+class Lesson(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    study_year = db.Column(db.String(50), nullable=False)
+    subject = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(100))  # e.g., "القرآن الكريم", "السنة النبوية"
+    lesson_name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
+
 with app.app_context():
     db.create_all()
 
@@ -228,14 +236,66 @@ def ai_room():
         subject = data.get("subject")
         query = data.get("query")
 
-        prompt = f"""
+        # Get approved lessons for this subject and year
+        lessons = Lesson.query.filter_by(
+            study_year=current_user.study_year,
+            subject=subject
+        ).all()
+        
+        # Check if this is an English subject
+        is_english = "english" in subject.lower() or "إنجليزي" in subject.lower()
+        
+        if lessons and not is_english:
+            lesson_list = "\n".join([f"- {lesson.lesson_name}" for lesson in lessons])
+            curriculum_instruction = f"""
+الدروس المعتمدة من وزارة التربية والتعليم لهذه المادة:
+{lesson_list}
+
+⚠️ مهم جداً:
+- تحقق أولاً إذا كان السؤال ({query}) يتعلق بأي درس من الدروس المذكورة أعلاه.
+- إذا كان السؤال خارج المنهج المعتمد، رد بالتالي:
+  {{"explanation": "عذراً، هذا الموضوع خارج المنهج الدراسي المعتمد من وزارة التربية والتعليم الليبية. يرجى اختيار موضوع من الدروس المقررة في منهجك.", "quiz": []}}
+- إذا كان السؤال ضمن المنهج، اشرحه بالتفصيل كالمعتاد.
+"""
+        else:
+            curriculum_instruction = ""
+
+        # Different prompts for English vs other subjects
+        if is_english:
+            prompt = f"""
 اشرح موضوع ({query}) في مادة ({subject}) لطلاب ({current_user.study_year}) في المنهج الليبي.
+
+{curriculum_instruction}
 
 التعليمات:
 1. استعمل اللهجة الليبية البيضاء (البسيطة والمفهومة) وكأنك مدرس ليبي خبير يحبب الطالب في المادة.
 2. الشرح لازم يكون مفصل ومنظم باستعمال Markdown (عناوين، نقاط، خط عريض).
 3. استند على المنهج الدراسي الليبي والمعلومات الصحيحة.
 4. بعد الشرح، اقترح 3 أسئلة اختيار من متعدد (Quiz) للتأكد من الفهم.
+5. ⚠️ مهم جداً: الشرح يكون بالعربي، لكن الأسئلة (quiz) لازم تكون بالإنجليزي بالكامل - السؤال والخيارات كلهم بالإنجليزي بدون أي حرف عربي.
+
+رد عليا بصيغة JSON فقط كالتالي:
+{{
+ "explanation": "الشرح هنا بالعربي بتنسيق Markdown مفصل...",
+ "quiz": [
+   {{"question": "Question in English?", "options": ["Option 1", "Option 2", "Option 3", "Option 4"], "correct": 0}},
+   ...
+ ]
+}}
+"""
+            system_message = "أنت 'افهمها وفهمني'، مدرس ليبي عبقري ومحبوب، تشرح اللغة الإنجليزية بطريقة مشوقة وبسيطة جداً بالعامية الليبية. الشرح يكون بالعربي، لكن الأسئلة (quiz) لازم تكون بالإنجليزي بالكامل."
+        else:
+            prompt = f"""
+اشرح موضوع ({query}) في مادة ({subject}) لطلاب ({current_user.study_year}) في المنهج الليبي.
+
+{curriculum_instruction}
+
+التعليمات:
+1. استعمل اللهجة الليبية البيضاء (البسيطة والمفهومة) وكأنك مدرس ليبي خبير يحبب الطالب في المادة.
+2. الشرح لازم يكون مفصل ومنظم باستعمال Markdown (عناوين، نقاط، خط عريض).
+3. استند على المنهج الدراسي الليبي والمعلومات الصحيحة.
+4. بعد الشرح، اقترح 3 أسئلة اختيار من متعدد (Quiz) للتأكد من الفهم.
+5. مهم: اكتب الشرح بالعربي، لكن خلي الرموز الرياضية والعلمية بالإنجليزي (مثل: x, y, =, +, -, ×, ÷, etc.)
 
 رد عليا بصيغة JSON فقط كالتالي:
 {{
@@ -246,12 +306,13 @@ def ai_room():
  ]
 }}
 """
+            system_message = "أنت 'افهمها وفهمني'، مدرس ليبي عبقري ومحبوب، تشرح المنهج الليبي بطريقة مشوقة وبسيطة جداً بالعامية الليبية. تكتب الشرح بالعربي لكن تخلي الرموز الرياضية والعلمية بالإنجليزي."
 
         try:
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "أنت 'افهمها وفهمني'، مدرس ليبي عبقري ومحبوب، تشرح المنهج الليبي بطريقة مشوقة وبسيطة جداً بالعامية الليبية."},
+                    {"role": "system", "content": system_message},
                     {"role": "user", "content": prompt}
                 ],
                 response_format={"type": "json_object"}
