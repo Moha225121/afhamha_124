@@ -236,36 +236,13 @@ def ai_room():
         subject = data.get("subject")
         query = data.get("query")
 
-        # Get approved lessons for this subject and year
-        lessons = Lesson.query.filter_by(
-            study_year=current_user.study_year,
-            subject=subject
-        ).all()
-        
         # Check if this is an English subject
         is_english = "english" in subject.lower() or "إنجليزي" in subject.lower()
-        
-        if lessons and not is_english:
-            lesson_list = "\n".join([f"- {lesson.lesson_name}" for lesson in lessons])
-            curriculum_instruction = f"""
-الدروس المعتمدة من وزارة التربية والتعليم لهذه المادة:
-{lesson_list}
-
-⚠️ مهم جداً:
-- تحقق أولاً إذا كان السؤال ({query}) يتعلق بأي درس من الدروس المذكورة أعلاه.
-- إذا كان السؤال خارج المنهج المعتمد، رد بالتالي:
-  {{"explanation": "عذراً، هذا الموضوع خارج المنهج الدراسي المعتمد من وزارة التربية والتعليم الليبية. يرجى اختيار موضوع من الدروس المقررة في منهجك.", "quiz": []}}
-- إذا كان السؤال ضمن المنهج، اشرحه بالتفصيل كالمعتاد.
-"""
-        else:
-            curriculum_instruction = ""
 
         # Different prompts for English vs other subjects
         if is_english:
             prompt = f"""
 اشرح موضوع ({query}) في مادة ({subject}) لطلاب ({current_user.study_year}) في المنهج الليبي.
-
-{curriculum_instruction}
 
 التعليمات:
 1. استعمل اللهجة الليبية البيضاء (البسيطة والمفهومة) وكأنك مدرس ليبي خبير يحبب الطالب في المادة.
@@ -287,8 +264,6 @@ def ai_room():
         else:
             prompt = f"""
 اشرح موضوع ({query}) في مادة ({subject}) لطلاب ({current_user.study_year}) في المنهج الليبي.
-
-{curriculum_instruction}
 
 التعليمات:
 1. استعمل اللهجة الليبية البيضاء (البسيطة والمفهومة) وكأنك مدرس ليبي خبير يحبب الطالب في المادة.
