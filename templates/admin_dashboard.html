@@ -1,0 +1,78 @@
+{% extends "base_auth.html" %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto py-6">
+  <div class="flex items-center justify-between mb-10">
+    <div>
+      <h2 class="text-3xl font-black text-slate-900 mb-2">لوحة الإدارة</h2>
+      <p class="text-slate-500 font-medium italic">نظرة عامة سريعة على المنصة</p>
+    </div>
+    <div class="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">🛡️</div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div
+      class="group relative bg-white rounded-[2rem] p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden border border-slate-50">
+      <div class="absolute top-0 left-0 w-1 h-full bg-primary group-hover:w-2 transition-all"></div>
+      <div class="flex items-center gap-4 mb-4">
+        <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-2xl">👥</div>
+        <p class="font-bold text-slate-500">إجمالي المستخدمين</p>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <h3 class="text-4xl font-black text-slate-900">{{ total_users }}</h3>
+        <span class="text-xs font-bold text-slate-400 italic">مستخدم</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-12 bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
+    <h3 class="text-xl font-black text-slate-900 mb-4">بحث عن مستخدم برقم الهاتف</h3>
+    <form method="GET" action="{{ url_for('admin_dashboard') }}" class="flex flex-col md:flex-row gap-4">
+      <input
+        type="text"
+        name="phone"
+        value="{{ phone_query or '' }}"
+        placeholder="اكتب رقم الهاتف"
+        class="flex-1 px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/30"
+      />
+      <button
+        type="submit"
+        class="px-8 py-3 rounded-2xl bg-primary text-white font-bold hover:bg-primary-dark transition-colors">
+        بحث
+      </button>
+    </form>
+
+    {% if phone_query %}
+      {% if found_user %}
+        <div class="mt-6 border border-slate-100 rounded-2xl p-6 bg-slate-50">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <p class="text-xs font-bold text-slate-400 mb-1">الاسم</p>
+              <p class="font-bold text-slate-900">{{ found_user.full_name or '—' }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-slate-400 mb-1">رقم الهاتف</p>
+              <p class="font-bold text-slate-900">{{ found_user.phone }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-slate-400 mb-1">كلمة المرور (مشفر)</p>
+              <p class="font-mono text-xs text-slate-700 break-all">{{ found_user.password }}</p>
+            </div>
+          </div>
+
+          <form method="POST" action="{{ url_for('admin_delete_user', user_id=found_user.id) }}" class="mt-6">
+            <button
+              type="submit"
+              onclick="return confirm('هل أنت متأكد من حذف هذا المستخدم؟')"
+              class="px-6 py-3 rounded-2xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors">
+              حذف المستخدم
+            </button>
+          </form>
+        </div>
+      {% else %}
+        <p class="mt-6 text-sm font-bold text-red-500">لم يتم العثور على مستخدم بهذا الرقم</p>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
