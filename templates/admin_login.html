@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة - تسجيل الدخول</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Vazirmatn:wght@300;400;700&display=swap"
+    rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: '#0f766e',
+              light: '#14b8a6',
+              dark: '#0f4c4c'
+            },
+            accent: '#f59e0b',
+            background: '#0b1120'
+          },
+          fontFamily: {
+            sans: ['Vazirmatn', 'Outfit', 'ui-sans-serif', 'system-ui'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background: radial-gradient(circle at top right, #1f2937 0%, #0b1120 100%);
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .input-field {
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 1.25rem;
+      padding: 1.25rem;
+      color: white;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 500;
+      backdrop-filter: blur(5px);
+    }
+
+    .input-field:focus {
+      outline: none;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-color: rgba(20, 184, 166, 0.5);
+      box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
+    }
+
+    .input-field::placeholder {
+      color: rgba(255, 255, 255, 0.35);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-6">
+
+  <div class="w-full max-w-[440px]">
+
+    <div class="flex flex-col items-center mb-10">
+      <div
+        class="w-16 h-16 bg-primary rounded-3xl flex items-center justify-center text-white text-4xl shadow-2xl shadow-primary/40 mb-4">
+        🛡️
+      </div>
+      <h1 class="text-3xl font-black text-white px-2">تسجيل دخول الإدارة</h1>
+      <p class="text-slate-400 font-medium mt-2">لوحة تحكم المشرفين فقط</p>
+    </div>
+
+    <div class="glass p-8 rounded-[3rem] shadow-2xl">
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div
+        class="bg-red-500/10 border border-red-500/20 text-red-200 p-4 rounded-2xl mb-6 text-sm text-center font-bold">
+        {{ messages[0] }}
+      </div>
+      {% endif %}
+      {% endwith %}
+
+      <form action="{{ url_for('admin_login') }}" method="POST" class="space-y-4">
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-slate-500 mr-2 uppercase tracking-widest">رقم الهاتف</label>
+          <input name="phone" required placeholder="09X XXXXXXX" class="input-field" dir="ltr">
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-slate-500 mr-2 uppercase tracking-widest">كلمة المرور</label>
+          <input name="password" type="password" required placeholder="••••••••" class="input-field">
+        </div>
+
+        <button type="submit"
+          class="w-full bg-primary text-white py-5 rounded-[1.5rem] font-black text-lg hover:bg-primary-dark transition-all shadow-xl shadow-primary/30 active:scale-95 mt-4">
+          دخول الإدارة
+        </button>
+      </form>
+
+      <div class="mt-6 text-center">
+        <a href="{{ url_for('signup') }}" class="text-sm text-slate-400 hover:text-white transition">الرجوع لتسجيل الطلاب</a>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
