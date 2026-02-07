@@ -26,14 +26,21 @@
   </div>
 
   <div class="mt-12 bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
-    <h3 class="text-xl font-black text-slate-900 mb-4">بحث عن مستخدم برقم الهاتف</h3>
-    <form method="GET" action="{{ url_for('admin_dashboard') }}" class="flex flex-col md:flex-row gap-4">
+    <h3 class="text-xl font-black text-slate-900 mb-4">بحث عن مستخدم</h3>
+    <form method="GET" action="{{ url_for('admin_dashboard') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <input
+        type="text"
+        name="name"
+        value="{{ name_query or '' }}"
+        placeholder="اكتب جزء من الاسم"
+        class="px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/30"
+      />
       <input
         type="text"
         name="phone"
         value="{{ phone_query or '' }}"
-        placeholder="اكتب رقم الهاتف"
-        class="flex-1 px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/30"
+        placeholder="اكتب جزء من رقم الهاتف"
+        class="px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/30"
       />
       <button
         type="submit"
@@ -42,35 +49,40 @@
       </button>
     </form>
 
-    {% if phone_query %}
-      {% if found_user %}
-        <div class="mt-6 border border-slate-100 rounded-2xl p-6 bg-slate-50">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p class="text-xs font-bold text-slate-400 mb-1">الاسم</p>
-              <p class="font-bold text-slate-900">{{ found_user.full_name or '—' }}</p>
+    {% if phone_query or name_query %}
+      {% if found_users and found_users|length > 0 %}
+        <div class="mt-6 space-y-4">
+          {% for u in found_users %}
+            <div class="border border-slate-100 rounded-2xl p-6 bg-slate-50">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <p class="text-xs font-bold text-slate-400 mb-1">الاسم</p>
+                  <p class="font-bold text-slate-900">{{ u.full_name or '—' }}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-bold text-slate-400 mb-1">رقم الهاتف</p>
+                  <p class="font-bold text-slate-900">{{ u.phone }}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-bold text-slate-400 mb-1">كلمة المرور (مشفر)</p>
+                  <p class="font-mono text-xs text-slate-700 break-all">{{ u.password }}</p>
+                </div>
+                <div class="flex items-end">
+                  <form method="POST" action="{{ url_for('admin_delete_user', user_id=u.id) }}" class="w-full">
+                    <button
+                      type="submit"
+                      onclick="return confirm('هل أنت متأكد من حذف هذا المستخدم؟')"
+                      class="w-full px-4 py-3 rounded-2xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors">
+                      حذف المستخدم
+                    </button>
+                  </form>
+                </div>
+              </div>
             </div>
-            <div>
-              <p class="text-xs font-bold text-slate-400 mb-1">رقم الهاتف</p>
-              <p class="font-bold text-slate-900">{{ found_user.phone }}</p>
-            </div>
-            <div>
-              <p class="text-xs font-bold text-slate-400 mb-1">كلمة المرور (مشفر)</p>
-              <p class="font-mono text-xs text-slate-700 break-all">{{ found_user.password }}</p>
-            </div>
-          </div>
-
-          <form method="POST" action="{{ url_for('admin_delete_user', user_id=found_user.id) }}" class="mt-6">
-            <button
-              type="submit"
-              onclick="return confirm('هل أنت متأكد من حذف هذا المستخدم؟')"
-              class="px-6 py-3 rounded-2xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors">
-              حذف المستخدم
-            </button>
-          </form>
+          {% endfor %}
         </div>
       {% else %}
-        <p class="mt-6 text-sm font-bold text-red-500">لم يتم العثور على مستخدم بهذا الرقم</p>
+        <p class="mt-6 text-sm font-bold text-red-500">لم يتم العثور على نتائج</p>
       {% endif %}
     {% endif %}
   </div>
