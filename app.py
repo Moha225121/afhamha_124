@@ -310,15 +310,22 @@ def admin_dashboard():
 
     total_users = User.query.count()
     phone_query = request.args.get('phone', '').strip()
-    found_user = None
-    if phone_query:
-        found_user = User.query.filter_by(phone=phone_query).first()
+    name_query = request.args.get('name', '').strip()
+    found_users = []
+    if phone_query or name_query:
+        query = User.query
+        if phone_query:
+            query = query.filter(User.phone.ilike(f"%{phone_query}%"))
+        if name_query:
+            query = query.filter(User.full_name.ilike(f"%{name_query}%"))
+        found_users = query.order_by(User.joined_at.desc()).limit(50).all()
 
     return render_template(
         'admin_dashboard.html',
         total_users=total_users,
         phone_query=phone_query,
-        found_user=found_user
+        name_query=name_query,
+        found_users=found_users
     )
 
 @app.route('/admin/delete/<int:user_id>', methods=['POST'])
