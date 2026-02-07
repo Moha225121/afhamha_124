@@ -110,6 +110,13 @@
           <span class="text-xl group-hover:scale-110 transition-transform">📚</span>
           <span class="font-medium">شروحاتي</span>
         </a>
+        {% if is_admin %}
+        <a href="{{ url_for('admin_dashboard') }}"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-600 hover:bg-primary-surface hover:text-primary active:scale-95 group">
+          <span class="text-xl group-hover:scale-110 transition-transform">🛠️</span>
+          <span class="font-medium">لوحة الإدارة</span>
+        </a>
+        {% endif %}
       </nav>
 
       <div class="mt-auto pt-6 border-t border-slate-100">

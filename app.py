@@ -35,6 +35,24 @@ login_manager.login_view = 'signup'
 # ---------------- OPENAI ----------------
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# ---------------- ADMIN ----------------
+def _get_admin_phones():
+    raw = os.getenv("ADMIN_PHONES", "")
+    primary = os.getenv("ADMIN_PHONE", "").strip()
+    admin1 = os.getenv("ADMIN1_PHONE", "0942120212").strip()
+    admin2 = os.getenv("ADMIN2_PHONE", "0910000000").strip()
+    phones = {p.strip() for p in raw.split(",") if p.strip()}
+    if primary:
+        phones.add(primary)
+    if admin1:
+        phones.add(admin1)
+    if admin2:
+        phones.add(admin2)
+    return phones
+
+def is_admin_user(user):
+    return bool(user and user.is_authenticated and user.phone in _get_admin_phones())
+
 # ---------------- CURRICULUM ----------------
 CURRICULUM = {
     "أولى إعدادي": [
@@ -150,9 +168,57 @@ class Lesson(db.Model):
 with app.app_context():
     db.create_all()
 
+    seed_admins = [
+        {
+            "phone": os.getenv("ADMIN1_PHONE", "0942120212").strip(),
+            "password": os.getenv("ADMIN1_PASSWORD", "12345678").strip(),
+            "name": os.getenv("ADMIN1_NAME", "Admin One").strip() or "Admin One"
+        },
+        {
+            "phone": os.getenv("ADMIN2_PHONE", "0910000000").strip(),
+            "password": os.getenv("ADMIN2_PASSWORD", "12345678").strip(),
+            "name": os.getenv("ADMIN2_NAME", "Admin Two").strip() or "Admin Two"
+        }
+    ]
+
+    legacy_phone = os.getenv("ADMIN_PHONE", "").strip()
+    legacy_password = os.getenv("ADMIN_PASSWORD", "").strip()
+    legacy_name = os.getenv("ADMIN_NAME", "Admin").strip() or "Admin"
+    if legacy_phone and legacy_password:
+        seed_admins.append({
+            "phone": legacy_phone,
+            "password": legacy_password,
+            "name": legacy_name
+        })
+
+    seen_phones = set()
+    for admin in seed_admins:
+        phone = admin.get("phone")
+        password = admin.get("password")
+        name = admin.get("name")
+        if not phone or not password:
+            continue
+        if phone in seen_phones:
+            continue
+        seen_phones.add(phone)
+        if not User.query.filter_by(phone=phone).first():
+            admin_user = User(
+                full_name=name,
+                phone=phone,
+                study_year=None,
+                password=generate_password_hash(password)
+            )
+            db.session.add(admin_user)
+    if seen_phones:
+        db.session.commit()
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
+
+@app.context_processor
+def inject_admin_flag():
+    return {"is_admin": is_admin_user(current_user)}
 
 # ---------------- ROUTES ----------------
 @app.route('/')
@@ -191,6 +257,21 @@ def login():
     flash("بيانات الدخول غير صحيحة")
     return redirect(url_for('signup'))
 
+@app.route('/admin-login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        phone = request.form.get('phone', '').strip()
+        password = request.form.get('password', '')
+        user = User.query.filter_by(phone=phone).first()
+        if user and check_password_hash(user.password, password) and is_admin_user(user):
+            login_user(user)
+            return redirect(url_for('admin_dashboard'))
+
+        flash("بيانات الإدارة غير صحيحة")
+        return redirect(url_for('admin_login'))
+
+    return render_template('admin_login.html')
+
 # ---------------- DASHBOARD ----------------
 @app.route('/dashboard')
 @login_required
@@ -219,6 +300,45 @@ def dashboard():
         stats=stats
     )
 
+# ---------------- ADMIN DASHBOARD ----------------
+@app.route('/admin')
+@login_required
+def admin_dashboard():
+    if not is_admin_user(current_user):
+        flash("غير مصرح لك بالدخول")
+        return redirect(url_for('dashboard'))
+
+    total_users = User.query.count()
+    phone_query = request.args.get('phone', '').strip()
+    found_user = None
+    if phone_query:
+        found_user = User.query.filter_by(phone=phone_query).first()
+
+    return render_template(
+        'admin_dashboard.html',
+        total_users=total_users,
+        phone_query=phone_query,
+        found_user=found_user
+    )
+
+@app.route('/admin/delete/<int:user_id>', methods=['POST'])
+@login_required
+def admin_delete_user(user_id):
+    if not is_admin_user(current_user):
+        flash("غير مصرح لك بالدخول")
+        return redirect(url_for('dashboard'))
+
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash("لا يمكنك حذف حسابك من لوحة الإدارة")
+        return redirect(url_for('admin_dashboard', phone=user.phone))
+
+    Explanation.query.filter_by(user_id=user.id).delete()
+    db.session.delete(user)
+    db.session.commit()
+    flash("تم حذف المستخدم بنجاح")
+    return redirect(url_for('admin_dashboard'))
+
 # ---------------- AI ROOM ----------------
 @app.route('/ai-room', methods=['GET', 'POST'])
 @login_required
@@ -230,7 +350,7 @@ def ai_room():
             return jsonify({"error": "انتهت فترة التجربة (شهرين) ورصيدك 0، اشترك تزيد نقاط"}), 403
 
         if current_user.ai_credits <= 0:
-            return jsonify({"error": "رصيدك خلص، اشترك باش تزيد نقاط"}), 403
+            return jsonify({"error": "رصيدك كمل. اشترك باش تزيد نقاط"}), 403
 
         data = request.json
         subject = data.get("subject")
