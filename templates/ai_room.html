@@ -105,7 +105,7 @@
           <select id="subject" onchange="updateSubjectDisplay()"
             class="w-full pl-8 lg:pl-10 pr-4 py-2.5 lg:py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-bold text-slate-700 appearance-none cursor-pointer text-xs lg:text-sm">
             {% for s in subjects %}
-            <option value="{{ s }}" {% if request.args.get('subject') == s %}selected{% endif %}>📚 {{ s }}</option>
+            <option value="{{ s }}" {% if request.args.get('subject')==s %}selected{% endif %}>📚 {{ s }}</option>
             {% endfor %}
           </select>
           <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
@@ -190,7 +190,7 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
   let correctAnswers = [];
-  const referencesMap = {{ references_map | tojson }};
+  const referencesMap = {{ references_map | tojson | safe }};
 
   function updateSubjectDisplay() {
     const select = document.getElementById("subject");
