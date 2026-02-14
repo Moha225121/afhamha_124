@@ -82,7 +82,7 @@ CURRICULUM = {
         "التربية الإسلامية", "لغة إنجليزية", "بلاغة",
         "الأدب والنصوص", "المطالعة والإنشاء",
         "النحو والصرف والإملاء", "الفلسفة",
-        "التاريخ", "الجغرافية",
+        "التاريخ", "الجغرافية", "الإحصاء",
         "تقنية المعلومات", "علم الاجتماع"
     ],
     "ثالثة ثانوي علمي": [
@@ -94,7 +94,7 @@ CURRICULUM = {
         "التربية الإسلامية", "لغة إنجليزية", "بلاغة",
         "الأدب والنصوص", "المطالعة والإنشاء",
         "النحو والصرف والإملاء", "الفلسفة",
-        "التاريخ", "الجغرافية",
+        "التاريخ", "الجغرافية", "الإحصاء",
         "تقنية المعلومات", "علم الاجتماع"
     ]
 }
@@ -130,6 +130,111 @@ SUBJECT_ICONS = {
     "دراسات لغوية": "📘",
     "دراسات أدبية": "📕"
 }
+
+# ---------------- REFERENCES ----------------
+STUDY_YEAR_REFERENCE_FOLDER = {
+    "أولى إعدادي": "7th_grade",
+    "ثانية إعدادي": "8th_grade",
+    "ثالثة إعدادي": "9th_grade",
+}
+
+REFERENCE_FILES = {
+    "7th_grade": {
+        "لغة عربية": [
+            {"label": "كتاب اللغة العربية", "file": "Arabic.pdf"}
+        ],
+        "لغة إنجليزية": [
+            {"label": "كتاب اللغة الإنجليزية", "file": "English.pdf"}
+        ],
+        "العلوم": [
+            {"label": "كتاب العلوم - الجزء الأول", "file": "Science1.pdf"},
+            {"label": "كتاب العلوم - الجزء الثاني", "file": "Science2.pdf"}
+        ],
+        "جغرافيا": [
+            {"label": "كتاب الجغرافيا", "file": "geography.pdf"}
+        ],
+        "تاريخ": [
+            {"label": "كتاب التاريخ", "file": "history.pdf"}
+        ],
+        "تربية إسلامية": [
+            {"label": "كتاب التربية الإسلامية", "file": "Islamic.pdf"}
+        ],
+        "رياضيات": [
+            {"label": "كتاب الرياضيات", "file": "maths.pdf"}
+        ],
+        "الحاسوب": [
+            {"label": "كتاب الحاسوب", "file": "computer.pdf"}
+        ]
+    },
+    "8th_grade": {
+        "لغة عربية": [
+            {"label": "كتاب اللغة العربية", "file": "arabic.pdf"}
+        ],
+        "لغة إنجليزية": [
+            {"label": "كتاب اللغة الإنجليزية", "file": "English.pdf"}
+        ],
+        "العلوم": [
+            {"label": "كتاب العلوم - الجزء الأول", "file": "science1.pdf"},
+            {"label": "كتاب العلوم - الجزء الثاني", "file": "science2.pdf"}
+        ],
+        "جغرافيا": [
+            {"label": "كتاب الجغرافيا", "file": "geography.pdf"}
+        ],
+        "تاريخ": [
+            {"label": "كتاب التاريخ", "file": "history.pdf"}
+        ],
+        "تربية إسلامية": [
+            {"label": "كتاب التربية الإسلامية", "file": "Islamic.pdf"}
+        ],
+        "رياضيات": [
+            {"label": "كتاب الرياضيات", "file": "maths.pdf"}
+        ],
+        "الحاسوب": [
+            {"label": "كتاب الحاسوب", "file": "computer.pdf"}
+        ]
+    },
+    "9th_grade": {
+        "لغة عربية": [
+            {"label": "كتاب اللغة العربية", "file": "arabic.pdf"}
+        ],
+        "لغة إنجليزية": [
+            {"label": "كتاب اللغة الإنجليزية", "file": "english.pdf"}
+        ],
+        "العلوم": [
+            {"label": "كتاب العلوم - الجزء الأول", "file": "science.pdf"},
+            {"label": "كتاب العلوم - الجزء الثاني", "file": "science2.pdf"}
+        ],
+        "جغرافيا": [
+            {"label": "كتاب الجغرافيا", "file": "geography.pdf"}
+        ],
+        "تربية إسلامية": [
+            {"label": "كتاب التربية الإسلامية", "file": "Islamic.pdf"}
+        ],
+        "رياضيات": [
+            {"label": "كتاب الرياضيات", "file": "maths.pdf"}
+        ],
+        "الحاسوب": [
+            {"label": "كتاب الحاسوب", "file": "computer.pdf"}
+        ]
+    }
+}
+
+def build_references_map(study_year):
+    folder = STUDY_YEAR_REFERENCE_FOLDER.get(study_year)
+    if not folder:
+        return {}
+
+    subject_refs = REFERENCE_FILES.get(folder, {})
+    references_map = {}
+    for subject, items in subject_refs.items():
+        refs = []
+        for item in items:
+            refs.append({
+                "label": item["label"],
+                "url": url_for("static", filename=f"References/{folder}/{item['file']}")
+            })
+        references_map[subject] = refs
+    return references_map
 
 # ---------------- MODELS ----------------
 class User(UserMixin, db.Model):
@@ -351,6 +456,7 @@ def admin_delete_user(user_id):
 @login_required
 def ai_room():
     subjects = CURRICULUM.get(current_user.study_year, [])
+    references_map = build_references_map(current_user.study_year)
 
     if request.method == 'POST':
         if not current_user.is_in_trial and current_user.ai_credits <= 0:
@@ -443,7 +549,11 @@ def ai_room():
             print(f"AI Error: {e}")
             return jsonify({"error": "فشل توليد الشرح، جرب مرة ثانية"}), 500
 
-    return render_template('ai_room.html', subjects=subjects)
+    return render_template(
+        'ai_room.html',
+        subjects=subjects,
+        references_map=references_map
+    )
 
 # ---------------- MY EXPLANATIONS ----------------
 @app.route('/my-explanations')
