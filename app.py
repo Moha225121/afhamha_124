@@ -2,6 +2,7 @@ import os
 import json
 import re
 from datetime import datetime, timedelta
+from time import sleep
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
@@ -34,6 +35,7 @@ login_manager.login_view = 'signup'
 
 # ---------------- OPENAI ----------------
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+ASSISTANT_ID = os.getenv("ASSISTANT_ID")
 
 # ---------------- ADMIN ----------------
 def _get_admin_phones():
@@ -650,25 +652,24 @@ def ai_room():
         subject = data.get("subject")
         query = data.get("query")
 
-        # Get available references for this subject
-        subject_references = references_map.get(subject, [])
-        reference_context = ""
-        if subject_references:
-            ref_names = [ref["label"] for ref in subject_references]
-            reference_context = f"\n📚 الكتب المتوفرة: {', '.join(ref_names)}"
-
         # Check if this is an English subject
         is_english = "english" in subject.lower() or "إنجليزي" in subject.lower()
 
-        # Different prompts for English vs other subjects
-        if is_english:
-            prompt = f"""
-اشرح موضوع ({query}) في مادة ({subject}) لطلاب ({current_user.study_year}) في المنهج الليبي.{reference_context}
+        try:
+            # 1) Create a new thread
+            thread = client.beta.threads.create()
 
-التعليمات:
+            # 2) Build the user message based on subject type
+            if is_english:
+                user_message = f"""
+المادة: {subject}
+الصف: {current_user.study_year}
+السؤال: {query}
+
+⚠️ التعليمات المهمة:
 1. استعمل اللهجة الليبية البيضاء (البسيطة والمفهومة) وكأنك مدرس ليبي خبير يحبب الطالب في المادة.
 2. الشرح لازم يكون مفصل ومنظم باستعمال Markdown (عناوين، نقاط، خط عريض).
-3. استند على المنهج الدراسي الليبي الرسمي والكتب المدرسية المعتمدة للصف الدراسي المذكور.
+3. أجب فقط من الكتب الدراسية الليبية المرفقة. إذا لم تجد المعلومة، قل صراحة: "المعلومة غير موجودة في المنهج".
 4. بعد الشرح، اقترح 3 أسئلة اختيار من متعدد (Quiz) للتأكد من الفهم.
 5. ⚠️ مهم جداً: الشرح يكون بالعربي، لكن الأسئلة (quiz) لازم تكون بالإنجليزي بالكامل - السؤال والخيارات كلهم بالإنجليزي بدون أي حرف عربي.
 
@@ -681,15 +682,16 @@ def ai_room():
  ]
 }}
 """
-            system_message = f"أنت 'افهمها وفهمني'، مدرس ليبي عبقري ومحبوب متخصص في المنهج الليبي الرسمي. تشرح اللغة الإنجليزية بطريقة مشوقة وبسيطة جداً بالعامية الليبية، وتعتمد على الكتب المدرسية المعتمدة من وزارة التعليم الليبية. الشرح يكون بالعربي، لكن الأسئلة (quiz) لازم تكون بالإنجليزي بالكامل."
-        else:
-            prompt = f"""
-اشرح موضوع ({query}) في مادة ({subject}) لطلاب ({current_user.study_year}) في المنهج الليبي.{reference_context}
+            else:
+                user_message = f"""
+المادة: {subject}
+الصف: {current_user.study_year}
+السؤال: {query}
 
-التعليمات:
+⚠️ التعليمات المهمة:
 1. استعمل اللهجة الليبية البيضاء (البسيطة والمفهومة) وكأنك مدرس ليبي خبير يحبب الطالب في المادة.
 2. الشرح لازم يكون مفصل ومنظم باستعمال Markdown (عناوين، نقاط، خط عريض).
-3. استند على المنهج الدراسي الليبي الرسمي والكتب المدرسية المعتمدة للصف الدراسي المذكور.
+3. أجب فقط من الكتب الدراسية الليبية المرفقة. إذا لم تجد المعلومة، قل صراحة: "المعلومة غير موجودة في المنهج".
 4. بعد الشرح، اقترح 3 أسئلة اختيار من متعدد (Quiz) للتأكد من الفهم.
 5. مهم: اكتب الشرح بالعربي، لكن خلي الرموز الرياضية والعلمية بالإنجليزي (مثل: x, y, =, +, -, ×, ÷, etc.)
 
@@ -702,36 +704,65 @@ def ai_room():
  ]
 }}
 """
-            system_message = f"أنت 'افهمها وفهمني'، مدرس ليبي عبقري ومحبوب متخصص في المنهج الليبي الرسمي. تشرح المنهج الليبي بطريقة مشوقة وبسيطة جداً بالعامية الليبية، وتعتمد على الكتب المدرسية المعتمدة من وزارة التعليم الليبية. تكتب الشرح بالعربي لكن تخلي الرموز الرياضية والعلمية بالإنجليزي."
 
-        try:
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": system_message},
-                    {"role": "user", "content": prompt}
-                ],
-                response_format={"type": "json_object"}
+            # 3) Send the user message
+            client.beta.threads.messages.create(
+                thread_id=thread.id,
+                role="user",
+                content=user_message
             )
 
-            ai_data = json.loads(response.choices[0].message.content)
-            
-            # Save explanation to DB
+            # 4) Run the assistant
+            run = client.beta.threads.runs.create(
+                thread_id=thread.id,
+                assistant_id=ASSISTANT_ID
+            )
+
+            # 5) Wait until completion
+            while run.status in ("queued", "in_progress"):
+                sleep(1)
+                run = client.beta.threads.runs.retrieve(
+                    thread_id=thread.id,
+                    run_id=run.id
+                )
+
+            if run.status != "completed":
+                return jsonify({"error": "فشل توليد الشرح"}), 500
+
+            # 6) Read assistant reply
+            messages = client.beta.threads.messages.list(thread_id=thread.id)
+            answer = messages.data[0].content[0].text.value
+
+            # 7) Try to parse as JSON for quiz, fallback to plain text
+            try:
+                ai_data = json.loads(answer)
+                explanation = ai_data.get("explanation", answer)
+                quiz = ai_data.get("quiz", [])
+            except json.JSONDecodeError:
+                # If not JSON, treat entire response as explanation
+                explanation = answer
+                quiz = []
+
+            # 8) Save explanation to DB
             exp = Explanation(
                 title=f"{subject}: {query}",
                 subject=subject,
-                content=ai_data["explanation"],
+                content=explanation,
                 user_id=current_user.id
             )
             db.session.add(exp)
 
-            # Update user stats
+            # 9) Update user stats
             current_user.ai_credits -= 5
             current_user.points += 10
             current_user.study_hours += 0.25
 
             db.session.commit()
-            return jsonify(ai_data)
+            
+            return jsonify({
+                "explanation": explanation,
+                "quiz": quiz
+            })
 
         except Exception as e:
             print(f"AI Error: {e}")
