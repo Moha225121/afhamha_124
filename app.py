@@ -37,6 +37,12 @@ login_manager.login_view = 'signup'
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 ASSISTANT_ID = os.getenv("ASSISTANT_ID")
 
+# Validate required environment variables
+if not ASSISTANT_ID:
+    print("⚠️ WARNING: ASSISTANT_ID is not set in environment variables!")
+    print("   The AI Room will not work until you set this variable.")
+    print("   Please add ASSISTANT_ID to your .env file or environment variables.")
+
 # ---------------- ADMIN ----------------
 def _get_admin_phones():
     raw = os.getenv("ADMIN_PHONES", "")
@@ -475,6 +481,10 @@ def ai_room():
         # Check if this is an English subject
         is_english = "english" in subject.lower() or "إنجليزي" in subject.lower()
 
+        # Check if ASSISTANT_ID is configured
+        if not ASSISTANT_ID:
+            return jsonify({"error": "خطأ في الإعدادات: ASSISTANT_ID غير موجود. تواصل مع الدعم الفني."}), 500
+
         try:
             # 1) Create a new thread
             thread = client.beta.threads.create()
@@ -554,8 +564,15 @@ def ai_room():
             answer = messages.data[0].content[0].text.value
 
             # 7) Try to parse as JSON for quiz, fallback to plain text
+            json_text = answer.strip()
+            if json_text.startswith("```"):
+                # Remove starting backticks and optional language identifier
+                json_text = re.sub(r'^```(?:json)?\s*', '', json_text)
+                # Remove ending backticks
+                json_text = re.sub(r'\s*```$', '', json_text)
+
             try:
-                ai_data = json.loads(answer)
+                ai_data = json.loads(json_text)
                 explanation = ai_data.get("explanation", answer)
                 quiz = ai_data.get("quiz", [])
             except json.JSONDecodeError:
