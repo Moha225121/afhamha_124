@@ -142,7 +142,6 @@ SUBJECT_ICONS = {
 }
 
 # ---------------- REFERENCES ----------------
-# ---------------- REFERENCES ----------------
 STUDY_YEAR_REFERENCE_FOLDER = {
     # Preparatory
     "أولى إعدادي": "7th_grade",
@@ -537,8 +536,20 @@ def ai_room():
             return jsonify({"error": "خطأ في الإعدادات: ASSISTANT_ID غير موجود. تواصل مع الدعم الفني."}), 500
 
         try:
-            # 1) Create a new thread
-            thread = client.beta.threads.create()
+            # 1) Identify and assign the correct vector store for this user's grade
+            folder = STUDY_YEAR_REFERENCE_FOLDER.get(current_user.study_year)
+            vector_store_id = os.getenv(f"VECTOR_STORE_{folder.upper()}") if folder else None
+            
+            thread_params = {}
+            if vector_store_id:
+                thread_params["tool_resources"] = {
+                    "file_search": {
+                        "vector_store_ids": [vector_store_id]
+                    }
+                }
+
+            # 2) Create a new thread with the specific vector store resources
+            thread = client.beta.threads.create(**thread_params)
 
             # 2) Build the user message based on subject type
             if is_english:
@@ -593,23 +604,12 @@ def ai_room():
                 content=user_message
             )
 
-            # 4) Run the assistant with dynamic vector store selection
-            folder = STUDY_YEAR_REFERENCE_FOLDER.get(current_user.study_year)
-            vector_store_id = os.getenv(f"VECTOR_STORE_{folder.upper()}") if folder else None
-            
-            run_params = {
-                "thread_id": thread.id,
-                "assistant_id": ASSISTANT_ID
-            }
-            
-            if vector_store_id:
-                run_params["tool_resources"] = {
-                    "file_search": {
-                        "vector_store_ids": [vector_store_id]
-                    }
-                }
-
-            run = client.beta.threads.runs.create(**run_params)
+            # 4) Run the assistant
+            # In SDK v2, tool_resources are set at the thread level, not the run level
+            run = client.beta.threads.runs.create(
+                thread_id=thread.id,
+                assistant_id=ASSISTANT_ID
+            )
 
             # 5) Wait until completion
             while run.status in ("queued", "in_progress"):
