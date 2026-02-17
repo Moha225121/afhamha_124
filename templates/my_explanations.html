@@ -30,6 +30,16 @@
         class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-[4rem] group-hover:scale-150 transition-transform duration-700">
       </div>
 
+      <!-- Delete Button -->
+      <button onclick="event.stopPropagation(); confirmDelete({{ exp.id }})"
+        class="absolute top-6 left-6 w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all z-20 group/delete active:scale-95"
+        title="حذف الشرح">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </button>
+
       <div class="relative z-10">
         <div class="flex items-center justify-between mb-6">
           <div
@@ -129,109 +139,191 @@
 
   </div>
 
-</div>
+  <!-- ================= CONFIRM DELETE MODAL ================= -->
+  <div id="confirmDeleteModal"
+    class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[110] p-6 animate-in fade-in duration-300">
+    <div
+      class="bg-white rounded-[3rem] p-10 w-full max-w-sm text-center shadow-2xl scale-in-center border border-slate-100">
+      <div class="text-7xl mb-6">🗑️</div>
+      <h3 class="text-2xl font-black mb-2 text-slate-900">حذف الشرح؟</h3>
+      <p class="text-slate-500 font-medium mb-10 leading-relaxed">متأكد تبي تحذف الشرح هذا؟ العملية هذه ما فيهاش تراجع.
+      </p>
 
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script>
-  function openModal(title, content, date) {
-    document.getElementById("modalTitle").innerText = title;
-    document.getElementById("modalDate").innerText = date;
+      <div class="flex flex-col gap-3">
+        <button id="confirmDeleteBtn"
+          class="w-full bg-red-500 text-white py-4 rounded-2xl font-black text-lg hover:bg-red-600 transition-all shadow-xl shadow-red-200 active:scale-95">
+          إي، احذف
+        </button>
+        <button onclick="closeDeleteModal()"
+          class="w-full bg-slate-100 text-slate-600 py-4 rounded-2xl font-black text-lg hover:bg-slate-200 transition-all active:scale-95">
+          لأ، خليـه
+        </button>
+      </div>
+    </div>
+  </div>
 
-    const contentBox = document.querySelector(".markdown-content");
-    contentBox.innerHTML = marked.parse(content);
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    function openModal(title, content, date) {
+      document.getElementById("modalTitle").innerText = title;
+      document.getElementById("modalDate").innerText = date;
 
-    const modal = document.getElementById("viewModal");
-    modal.classList.remove("hidden");
-    modal.classList.add("flex");
-  }
+      const contentBox = document.querySelector(".markdown-content");
+      contentBox.innerHTML = marked.parse(content);
 
-  function closeModal() {
-    const modal = document.getElementById("viewModal");
-    modal.classList.add("hidden");
-    modal.classList.remove("flex");
-  }
-
-  // Close on escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeModal();
-  });
-</script>
-
-<style>
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    border-radius: 10px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
-  }
-
-  .scale-in-center {
-    animation: scale-in-center 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
-  }
-
-  @keyframes scale-in-center {
-    0% {
-      transform: scale(0.5);
-      opacity: 0;
+      const modal = document.getElementById("viewModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
     }
 
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  @media print {
-    body * {
-      visibility: hidden;
+    function closeModal() {
+      const modal = document.getElementById("viewModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
     }
 
-    #viewModal,
-    #viewModal * {
-      visibility: visible;
+    // Close on escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        closeDeleteModal();
+      }
+    });
+
+    /* ================= DELETE LOGIC ================= */
+    let explanationIdToDelete = null;
+
+    function confirmDelete(id) {
+      explanationIdToDelete = id;
+      const modal = document.getElementById("confirmDeleteModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+
+      document.getElementById("confirmDeleteBtn").onclick = () => deleteExplanation(id);
     }
 
-    #viewModal {
-      position: absolute;
-      left: 0;
-      top: 0;
-      background: white !important;
-      display: block !important;
-      padding: 0 !important;
+    function closeDeleteModal() {
+      const modal = document.getElementById("confirmDeleteModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      explanationIdToDelete = null;
     }
 
-    .bg-slate-900/60 {
-      display: none !important;
+    function deleteExplanation(id) {
+      const btn = document.getElementById("confirmDeleteBtn");
+      btn.disabled = true;
+      btn.innerText = "جاري الحذف...";
+      btn.classList.add("opacity-50");
+
+      fetch(`/api/delete-explanation/${id}`, {
+        method: 'POST'
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            // Find the card and animate removal
+            const cards = document.querySelectorAll('.grid > div');
+            cards.forEach(card => {
+              // This is a bit hacky since we don't have IDs on elements, 
+              // but we can check the onclick attribute or just reload
+              if (card.getAttribute('onclick').includes(`confirmDelete(${id})`)) {
+                // Actually, the card onclick is openModal, let's fix that
+              }
+            });
+            // Simplest way: reload the page or use a more specific selector
+            window.location.reload();
+          } else {
+            alert(data.error || "فشل الحذف");
+            closeDeleteModal();
+          }
+        })
+        .catch(err => {
+          alert("خطأ في الاتصال");
+          closeDeleteModal();
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.innerText = "إي، احذف";
+          btn.classList.remove("opacity-50");
+        });
+    }
+  </script>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
     }
 
-    .max-w-3xl {
-      max-width: 100% !important;
-      border: none !important;
-      box-shadow: none !important;
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
     }
 
-    .modal-footer,
-    .p-3,
-    button {
-      display: none !important;
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 10px;
     }
 
-    #modalContent {
-      overflow: visible !important;
-      height: auto !important;
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #cbd5e1;
     }
-  }
-</style>
 
-{% endblock %}
+    .scale-in-center {
+      animation: scale-in-center 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    }
+
+    @keyframes scale-in-center {
+      0% {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      #viewModal,
+      #viewModal * {
+        visibility: visible;
+      }
+
+      #viewModal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        background: white !important;
+        display: block !important;
+        padding: 0 !important;
+      }
+
+      .bg-slate-900/60 {
+        display: none !important;
+      }
+
+      .max-w-3xl {
+        max-width: 100% !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+
+      .modal-footer,
+      .p-3,
+      button {
+        display: none !important;
+      }
+
+      #modalContent {
+        overflow: visible !important;
+        height: auto !important;
+      }
+    }
+  </style>
+
+  {% endblock %}

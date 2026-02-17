@@ -714,6 +714,20 @@ def api_explanations():
         for e in explanations
     ])
 
+@app.route('/api/delete-explanation/<int:explanation_id>', methods=['POST'])
+@login_required
+def delete_explanation(explanation_id):
+    exp = db.session.get(Explanation, explanation_id)
+    if not exp:
+        return jsonify({"success": False, "error": "الشرح غير موجود"}), 404
+    
+    if exp.user_id != current_user.id:
+        return jsonify({"success": False, "error": "غير مصرح لك بحذف هذا الشرح"}), 403
+    
+    db.session.delete(exp)
+    db.session.commit()
+    return jsonify({"success": True})
+
 @app.route('/logout')
 def logout():
     logout_user()
