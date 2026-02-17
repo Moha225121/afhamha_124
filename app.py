@@ -569,13 +569,13 @@ def ai_room():
 6. ⚠️ مهم جداً: الشرح يكون بالعربي، لكن الأسئلة (quiz) لازم تكون بالإنجليزي بالكامل - السؤال والخيارات كلهم بالإنجليزي بدون أي حرف عربي.
 
 رد عليا بصيغة JSON فقط كالتالي:
-{{
+{
  "explanation": "الشرح هنا بالعربي بتنسيق Markdown مفصل...",
  "quiz": [
-   {{"question": "Question in English?", "options": ["Option 1", "Option 2", "Option 3", "Option 4"], "correct": 0}},
+   {"question": "Question in English?", "options": ["Option 1", "Option 2", "Option 3", "Option 4"], "correct": 0},
    ...
  ]
-}}
+}
 """
             else:
                 user_message = f"""
@@ -594,13 +594,13 @@ def ai_room():
 6. مهم: اكتب الشرح بالعربي، لكن خلي الرموز الرياضية والعلمية بالإنجليزي (مثل: x, y, =, +, -, ×, ÷, etc.)
 
 رد عليا بصيغة JSON فقط كالتالي:
-{{
+{
  "explanation": "الشرح هنا بتنسيق Markdown مفصل...",
  "quiz": [
-   {{"question": "السؤال الأول؟", "options": ["خيار 1", "خيار 2", "خيار 3", "خيار 4"], "correct": 0}},
+   {"question": "السؤال الأول؟", "options": ["خيار 1", "خيار 2", "خيار 3", "خيار 4"], "correct": 0},
    ...
  ]
-}}
+}
 """
 
             # 3) Send the user message
