@@ -142,7 +142,6 @@ SUBJECT_ICONS = {
 }
 
 # ---------------- REFERENCES ----------------
-# ---------------- REFERENCES ----------------
 STUDY_YEAR_REFERENCE_FOLDER = {
     # Preparatory
     "أولى إعدادي": "7th_grade",
@@ -537,8 +536,20 @@ def ai_room():
             return jsonify({"error": "خطأ في الإعدادات: ASSISTANT_ID غير موجود. تواصل مع الدعم الفني."}), 500
 
         try:
-            # 1) Create a new thread
-            thread = client.beta.threads.create()
+            # 1) Identify and assign the correct vector store for this user's grade
+            folder = STUDY_YEAR_REFERENCE_FOLDER.get(current_user.study_year)
+            vector_store_id = os.getenv(f"VECTOR_STORE_{folder.upper()}") if folder else None
+            
+            thread_params = {}
+            if vector_store_id:
+                thread_params["tool_resources"] = {
+                    "file_search": {
+                        "vector_store_ids": [vector_store_id]
+                    }
+                }
+
+            # 2) Create a new thread with the specific vector store resources
+            thread = client.beta.threads.create(**thread_params)
 
             # 2) Build the user message based on subject type
             if is_english:
@@ -547,12 +558,15 @@ def ai_room():
 الصف: {current_user.study_year}
 السؤال: {query}
 
-⚠️ التعليمات المهمة:
+⚠️ التعليمات الصارمة جداً:
 1. استعمل اللهجة الليبية البيضاء (البسيطة والمفهومة) وكأنك مدرس ليبي خبير يحبب الطالب في المادة.
 2. الشرح لازم يكون مفصل ومنظم باستعمال Markdown (عناوين، نقاط، خط عريض).
-3. أجب فقط من الكتب الدراسية الليبية المرفقة. إذا لم تجد المعلومة، قل صراحة: "المعلومة غير موجودة في المنهج".
-4. بعد الشرح، اقترح 3 أسئلة اختيار من متعدد (Quiz) للتأكد من الفهم.
-5. ⚠️ مهم جداً: الشرح يكون بالعربي، لكن الأسئلة (quiz) لازم تكون بالإنجليزي بالكامل - السؤال والخيارات كلهم بالإنجليزي بدون أي حرف عربي.
+3. ❗ ممنوع منعاً باتاً الإجابة من خارج الكتب الدراسية الليبية المرفقة. 
+4. ❗ إذا لم تجد المعلومة في الكتب المرفقة، يجب أن يكون ردك كالتالي:
+   - في خانة "explanation" اكتب فقط: "نعتذر منك، هذه المعلومة غير موجودة في المنهج الدراسي الليبي المخصص لصفك."
+   - في خانة "quiz" ضع قائمة فارغة [].
+5. بعد الشرح (إذا توفر في المنهج)، اقترح 3 أسئلة اختيار من متعدد (Quiz) للتأكد من الفهم.
+6. ⚠️ مهم جداً: الشرح يكون بالعربي، لكن الأسئلة (quiz) لازم تكون بالإنجليزي بالكامل - السؤال والخيارات كلهم بالإنجليزي بدون أي حرف عربي.
 
 رد عليا بصيغة JSON فقط كالتالي:
 {{
@@ -569,12 +583,15 @@ def ai_room():
 الصف: {current_user.study_year}
 السؤال: {query}
 
-⚠️ التعليمات المهمة:
+⚠️ التعليمات الصارمة جداً:
 1. استعمل اللهجة الليبية البيضاء (البسيطة والمفهومة) وكأنك مدرس ليبي خبير يحبب الطالب في المادة.
 2. الشرح لازم يكون مفصل ومنظم باستعمال Markdown (عناوين، نقاط، خط عريض).
-3. أجب فقط من الكتب الدراسية الليبية المرفقة. إذا لم تجد المعلومة، قل صراحة: "المعلومة غير موجودة في المنهج".
-4. بعد الشرح، اقترح 3 أسئلة اختيار من متعدد (Quiz) للتأكد من الفهم.
-5. مهم: اكتب الشرح بالعربي، لكن خلي الرموز الرياضية والعلمية بالإنجليزي (مثل: x, y, =, +, -, ×, ÷, etc.)
+3. ❗ ممنوع منعاً باتاً الإجابة من خارج الكتب الدراسية الليبية المرفقة.
+4. ❗ إذا لم تجد المعلومة في الكتب المرفقة، يجب أن يكون ردك كالتالي:
+   - في خانة "explanation" اكتب فقط: "نعتذر منك، هذه المعلومة غير موجودة في المنهج الدراسي الليبي المخصص لصفك."
+   - في خانة "quiz" ضع قائمة فارغة [].
+5. بعد الشرح (إذا توفر في المنهج)، اقترح 3 أسئلة اختيار من متعدد (Quiz) للتأكد من الفهم.
+6. مهم: اكتب الشرح بالعربي، لكن خلي الرموز الرياضية والعلمية بالإنجليزي (مثل: x, y, =, +, -, ×, ÷, etc.)
 
 رد عليا بصيغة JSON فقط كالتالي:
 {{
@@ -593,23 +610,12 @@ def ai_room():
                 content=user_message
             )
 
-            # 4) Run the assistant with dynamic vector store selection
-            folder = STUDY_YEAR_REFERENCE_FOLDER.get(current_user.study_year)
-            vector_store_id = os.getenv(f"VECTOR_STORE_{folder.upper()}") if folder else None
-            
-            run_params = {
-                "thread_id": thread.id,
-                "assistant_id": ASSISTANT_ID
-            }
-            
-            if vector_store_id:
-                run_params["tool_resources"] = {
-                    "file_search": {
-                        "vector_store_ids": [vector_store_id]
-                    }
-                }
-
-            run = client.beta.threads.runs.create(**run_params)
+            # 4) Run the assistant
+            # In SDK v2, tool_resources are set at the thread level, not the run level
+            run = client.beta.threads.runs.create(
+                thread_id=thread.id,
+                assistant_id=ASSISTANT_ID
+            )
 
             # 5) Wait until completion
             while run.status in ("queued", "in_progress"):
