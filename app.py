@@ -29,6 +29,46 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+# ---------------- AUTO MIGRATION ----------------
+def run_auto_migration():
+    print("Running startup migration check...")
+    try:
+        from sqlalchemy import text
+        with db.engine.connect() as conn:
+            # Aggressive PostgreSQL check
+            if database_url.startswith("postgresql"):
+                queries = [
+                    'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;',
+                    'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0;',
+                    'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS study_hours FLOAT DEFAULT 0.0;',
+                    'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;',
+                    'ALTER TABLE explanation ADD COLUMN IF NOT EXISTS subject VARCHAR(100);',
+                    'ALTER TABLE explanation ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;'
+                ]
+                for q in queries:
+                    try:
+                        conn.execute(text(q))
+                        conn.commit()
+                    except:
+                        pass
+                
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS lesson (
+                        id SERIAL PRIMARY KEY,
+                        study_year VARCHAR(50) NOT NULL,
+                        subject VARCHAR(100) NOT NULL,
+                        category VARCHAR(100),
+                        lesson_name VARCHAR(255) NOT NULL,
+                        description TEXT
+                    );
+                """))
+                conn.commit()
+        print("Startup migration check completed.")
+    except Exception as e:
+        print(f"Startup migration failed: {e}")
+
+run_auto_migration()
+
 # ---------------- LOGIN ----------------
 login_manager = LoginManager(app)
 login_manager.login_view = 'signup'
