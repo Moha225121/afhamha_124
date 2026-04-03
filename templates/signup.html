@@ -114,10 +114,17 @@
 
             <!-- Signup/OTP UI -->
             {% if verify_otp %}
-            <form id="otpForm" action="/verify-otp" method="POST" class="space-y-6">
+            <form id="otpForm" action="{{ url_for('verify_login_otp') if login_verify else url_for('verify_otp') }}" method="POST" class="space-y-6">
                 <div class="text-center mb-4">
                     <p class="text-slate-300 text-sm">أدخل الرمز المكون من 4 أرقام الذي وصلك على هاتفك</p>
-                    <p class="text-primary font-bold mt-1" dir="ltr">{{ session['pending_user']['phone'] }}</p>
+                    {% if login_verify %}
+                        <p class="text-primary font-bold mt-1" dir="ltr">{{ session.get('pending_phone', '') }}</p>
+                    {% else %}
+                        <p class="text-primary font-bold mt-1" dir="ltr">{{ session['pending_user']['phone'] if session.get('pending_user') else '' }}</p>
+                    {% endif %}
+                    <div class="mt-3 inline-block bg-accent/20 border border-accent/30 text-accent-light px-4 py-1.5 rounded-full text-xs font-bold animate-pulse">
+                        🎁 ستحصل على 50 نقطة هدية عند التفعيل
+                    </div>
                 </div>
                 
                 <div class="space-y-2">

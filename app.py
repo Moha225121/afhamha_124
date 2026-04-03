@@ -248,6 +248,7 @@ class User(UserMixin, db.Model):
     ai_credits = db.Column(db.Integer, default=250)
     points = db.Column(db.Integer, default=0)
     study_hours = db.Column(db.Float, default=0.0)
+    is_verified = db.Column(db.Boolean, default=False)
     joined_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property
@@ -313,7 +314,8 @@ with app.app_context():
                 full_name=name,
                 phone=phone,
                 study_year=None,
-                password=generate_password_hash(password)
+                password=generate_password_hash(password),
+                is_verified=True
             )
             db.session.add(admin_user)
     if seen_phones:
@@ -326,6 +328,23 @@ def load_user(user_id):
 @app.context_processor
 def inject_admin_flag():
     return {"is_admin": is_admin_user(current_user)}
+
+@app.before_request
+def check_verification():
+    # Only check if user is logged in and not on a static/excluded route
+    if current_user.is_authenticated:
+        # Exclude routes that don't need verification check
+        excluded_routes = ['logout', 'signup', 'login', 'verify_otp', 'verify_login_otp', 'static']
+        if request.endpoint not in excluded_routes and not current_user.is_verified:
+            # Trigger OTP send if not already in session
+            if 'pending_pin' not in session:
+                pin = send_otp(current_user.phone)
+                if pin:
+                    session['pending_verify_user_id'] = current_user.id
+                    session['pending_phone'] = current_user.phone
+                    session['pending_pin'] = pin
+            
+            return render_template('signup.html', verify_otp=True, login_verify=True)
 
 # ---------------- ROUTES ----------------
 @app.route('/')
@@ -375,7 +394,9 @@ def verify_otp():
             full_name=pending_user['full_name'],
             phone=pending_user['phone'],
             study_year=pending_user['study_year'],
-            password=pending_user['password']
+            password=pending_user['password'],
+            is_verified=True,
+            points=50 # Assigning 50 points gift
         )
         db.session.add(user)
         db.session.commit()
@@ -384,20 +405,65 @@ def verify_otp():
         session.pop('pending_user', None)
         
         login_user(user)
+        flash("تهانينا! تم تفعيل حسابك وإضافة 50 نقطة هدية لرصيدك 🎉")
         return redirect(url_for('dashboard'))
     else:
         flash("رمز التحقق غير صحيح")
         return render_template('signup.html', verify_otp=True)
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    user = User.query.filter_by(phone=request.form['phone']).first()
-    if user and check_password_hash(user.password, request.form['password']):
-        login_user(user)
-        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        phone = request.form['phone']
+        password = request.form['password']
+        user = User.query.filter_by(phone=phone).first()
 
-    flash("بيانات الدخول غير صحيحة")
+        if user and check_password_hash(user.password, password):
+            if not user.is_verified:
+                # Need to verify
+                pin = send_otp(phone)
+                if not pin:
+                    flash("فشل إرسال رمز التحقق")
+                    return redirect(url_for('signup'))
+                
+                session['pending_verify_user_id'] = user.id
+                session['pending_phone'] = user.phone
+                session['pending_pin'] = pin
+                return render_template('signup.html', verify_otp=True, login_verify=True)
+            
+            login_user(user)
+            return redirect(url_for('dashboard'))
+
+        flash("بيانات الدخول غير صحيحة")
+        return redirect(url_for('signup'))
     return redirect(url_for('signup'))
+
+@app.route('/verify-login-otp', methods=['POST'])
+def verify_login_otp():
+    user_id = session.get('pending_verify_user_id')
+    expected_pin = session.get('pending_pin')
+    entered_otp = request.form.get('otp', '').strip()
+
+    if not user_id or not expected_pin:
+        return redirect(url_for('signup'))
+
+    if entered_otp == str(expected_pin):
+        user = User.query.get(user_id)
+        if user:
+            if not user.is_verified:
+                user.points += 50
+                user.is_verified = True
+                db.session.commit()
+                flash("تم إثبات ملكية الرقم وإضافة 50 نقطة هدية لرصيدك 🎉")
+            
+            login_user(user)
+            session.pop('pending_verify_user_id', None)
+            session.pop('pending_phone', None)
+            session.pop('pending_pin', None)
+            return redirect(url_for('dashboard'))
+    
+    flash("رمز التحقق غير صحيح")
+    return render_template('signup.html', verify_otp=True, login_verify=True)
 
 @app.route('/admin-login', methods=['GET', 'POST'])
 def admin_login():
