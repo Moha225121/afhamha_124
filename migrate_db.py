@@ -105,10 +105,40 @@ try:
             conn.commit()
             print("✓ Created lesson table")
             migrations_run += 1
+        # Migration 5: Add is_verified to user table
+        if not column_exists(conn, 'user', 'is_verified'):
+            print("Adding 'is_verified' column to user table...")
+            conn.execute(text("""
+                ALTER TABLE "user" 
+                ADD COLUMN is_verified BOOLEAN DEFAULT FALSE;
+            """))
+            conn.commit()
+            print("✓ Added is_verified column")
+            migrations_run += 1
         else:
-            print("✓ Table 'lesson' already exists")
+            print("✓ Column 'is_verified' already exists in user table")
         
-        if migrations_run > 0:
+        # Migration 6: Add points to user table
+        if not column_exists(conn, 'user', 'points'):
+            print("Adding 'points' column to user table...")
+            conn.execute(text("""
+                ALTER TABLE "user" 
+                ADD COLUMN points INTEGER DEFAULT 0;
+            """))
+            conn.commit()
+            print("✓ Added points column")
+            migrations_run += 1
+        
+        # Migration 7: Add study_hours to user table
+        if not column_exists(conn, 'user', 'study_hours'):
+            print("Adding 'study_hours' column to user table...")
+            conn.execute(text("""
+                ALTER TABLE "user" 
+                ADD COLUMN study_hours FLOAT DEFAULT 0.0;
+            """))
+            conn.commit()
+            print("✓ Added study_hours column")
+            migrations_run += 1
             print(f"\n✓ Migration completed! {migrations_run} column(s) added.")
         else:
             print("\n✓ Database is up to date. No migrations needed.")
