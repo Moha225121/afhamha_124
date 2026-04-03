@@ -102,6 +102,7 @@
             {% endif %}
             {% endwith %}
 
+            {% if not verify_otp %}
             <div class="flex bg-black/20 p-1.5 rounded-2xl mb-8">
                 <button onclick="toggle(true)" id="sBtn"
                     class="flex-1 py-3 bg-primary text-white rounded-[1.25rem] font-bold transition-all shadow-lg shadow-primary/20">إنشاء
@@ -109,7 +110,31 @@
                 <button onclick="toggle(false)" id="lBtn"
                     class="flex-1 py-3 text-slate-400 font-bold hover:text-white transition-all">تسجيل الدخول</button>
             </div>
+            {% endif %}
 
+            <!-- Signup/OTP UI -->
+            {% if verify_otp %}
+            <form id="otpForm" action="/verify-otp" method="POST" class="space-y-6">
+                <div class="text-center mb-4">
+                    <p class="text-slate-300 text-sm">أدخل الرمز المكون من 4 أرقام الذي وصلك على هاتفك</p>
+                    <p class="text-primary font-bold mt-1" dir="ltr">{{ session['pending_user']['phone'] }}</p>
+                </div>
+                
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 mr-2 uppercase tracking-widest text-center block">رمز التحقق</label>
+                    <input name="otp" required maxlength="4" placeholder="0 0 0 0" class="input-field text-center text-3xl tracking-[1rem] font-black" autofocus>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-primary text-white py-5 rounded-[1.5rem] font-black text-lg hover:bg-primary-dark transition-all shadow-xl shadow-primary/20 active:scale-95">
+                    تحقق وفعل الحساب
+                </button>
+                
+                <div class="text-center">
+                    <a href="/signup" class="text-slate-400 text-sm hover:text-white transition-all">الرجوع لتعديل البيانات</a>
+                </div>
+            </form>
+            {% else %}
             <!-- Signup Form -->
             <form id="sForm" action="/signup" method="POST" class="space-y-4">
                 <div class="space-y-1">
@@ -148,6 +173,7 @@
                     انضم الآن
                 </button>
             </form>
+            {% endif %}
 
             <!-- Login Form -->
             <form id="lForm" action="/login" method="POST" class="space-y-4 hidden">

@@ -2,9 +2,9 @@ import os
 import json
 import re
 from datetime import datetime, timedelta
-from time import sleep
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
+from resala_api import send_otp
 from flask_login import (
     LoginManager, UserMixin, login_user,
     login_required, logout_user, current_user
@@ -35,13 +35,6 @@ login_manager.login_view = 'signup'
 
 # ---------------- OPENAI ----------------
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-ASSISTANT_ID = os.getenv("ASSISTANT_ID")
-
-# Validate required environment variables
-if not ASSISTANT_ID:
-    print("⚠️ WARNING: ASSISTANT_ID is not set in environment variables!")
-    print("   The AI Room will not work until you set this variable.")
-    print("   Please add ASSISTANT_ID to your .env file or environment variables.")
 
 # ---------------- ADMIN ----------------
 def _get_admin_phones():
@@ -91,7 +84,7 @@ CURRICULUM = {
         "الأدب والنصوص", "المطالعة والإنشاء",
         "النحو والصرف والإملاء", "الفلسفة",
         "التاريخ", "الجغرافية", "الإحصاء",
-        "تقنية المعلومات", "علم الاجتماع", "علم النفس"
+        "تقنية المعلومات", "علم الاجتماع"
     ],
     "ثالثة ثانوي علمي": [
         "التربية الإسلامية", "دراسات لغوية", "دراسات أدبية",
@@ -103,7 +96,7 @@ CURRICULUM = {
         "الأدب والنصوص", "المطالعة والإنشاء",
         "النحو والصرف والإملاء", "الفلسفة",
         "التاريخ", "الجغرافية", "الإحصاء",
-        "تقنية المعلومات", "علم الاجتماع", "علم النفس", "النقد الأدبي"
+        "تقنية المعلومات", "علم الاجتماع"
     ]
 }
 
@@ -136,145 +129,95 @@ SUBJECT_ICONS = {
     "المطالعة والإنشاء": "✍️",
     "النحو والصرف والإملاء": "🖊️",
     "دراسات لغوية": "📘",
-    "دراسات أدبية": "📕",
-    "علم النفس": "🧠",
-    "النقد الأدبي": "🔍"
+    "دراسات أدبية": "📕"
 }
 
 # ---------------- REFERENCES ----------------
 STUDY_YEAR_REFERENCE_FOLDER = {
-    # Preparatory
     "أولى إعدادي": "7th_grade",
-    "اول اعدادي": "7th_grade",
     "ثانية إعدادي": "8th_grade",
-    "ثاني اعدادي": "8th_grade",
     "ثالثة إعدادي": "9th_grade",
-    # Secondary
-    "أولى ثانوي عام": "1st_secandory",
-    "اول ثانوي": "1st_secandory",
-    "ثانية ثانوي علمي": "2nd_secandory_s",
-    "ثاني ثانوي علمي": "2nd_secandory_s",
-    "ثانية ثانوي أدبي": "2nd_secandory_L",
-    "ثاني ثانوي ادبي": "2nd_secandory_L",
-    "ثالثة ثانوي علمي": "3rd_secandory_S",
-    "ثالث ثانوي علمي": "3rd_secandory_S",
-    "ثالثة ثانوي أدبي": "3rd_secandory_L",
-    "ثالث ثانوي ادبي": "3rd_secandory_L"
+    "اول ثانوي" : "1st_secandory"
 }
 
 REFERENCE_FILES = {
     "7th_grade": {
-        "لغة عربية": [{"label": "كتاب اللغة العربية", "file": "Arabic.pdf"}],
-        "لغة إنجليزية": [{"label": "كتاب اللغة الإنجليزية", "file": "English.pdf"}],
+        "لغة عربية": [
+            {"label": "كتاب اللغة العربية", "file": "Arabic.pdf"}
+        ],
+        "لغة إنجليزية": [
+            {"label": "كتاب اللغة الإنجليزية", "file": "English.pdf"}
+        ],
         "العلوم": [
             {"label": "كتاب العلوم - الجزء الأول", "file": "Science1.pdf"},
             {"label": "كتاب العلوم - الجزء الثاني", "file": "Science2.pdf"}
         ],
-        "جغرافيا": [{"label": "كتاب الجغرافيا", "file": "geography.pdf"}],
-        "تاريخ": [{"label": "كتاب التاريخ", "file": "history.pdf"}],
-        "تربية إسلامية": [{"label": "كتاب التربية الإسلامية", "file": "Islamic.pdf"}],
-        "رياضيات": [{"label": "كتاب الرياضيات", "file": "maths.pdf"}],
-        "الحاسوب": [{"label": "كتاب الحاسوب", "file": "computer.pdf"}]
+        "جغرافيا": [
+            {"label": "كتاب الجغرافيا", "file": "geography.pdf"}
+        ],
+        "تاريخ": [
+            {"label": "كتاب التاريخ", "file": "history.pdf"}
+        ],
+        "تربية إسلامية": [
+            {"label": "كتاب التربية الإسلامية", "file": "Islamic.pdf"}
+        ],
+        "رياضيات": [
+            {"label": "كتاب الرياضيات", "file": "maths.pdf"}
+        ],
+        "الحاسوب": [
+            {"label": "كتاب الحاسوب", "file": "computer.pdf"}
+        ]
     },
     "8th_grade": {
-        "لغة عربية": [{"label": "كتاب اللغة العربية", "file": "arabic.pdf"}],
-        "لغة إنجليزية": [{"label": "كتاب اللغة الإنجليزية", "file": "English.pdf"}],
+        "لغة عربية": [
+            {"label": "كتاب اللغة العربية", "file": "arabic.pdf"}
+        ],
+        "لغة إنجليزية": [
+            {"label": "كتاب اللغة الإنجليزية", "file": "English.pdf"}
+        ],
         "العلوم": [
             {"label": "كتاب العلوم - الجزء الأول", "file": "science1.pdf"},
             {"label": "كتاب العلوم - الجزء الثاني", "file": "science2.pdf"}
         ],
-        "جغرافيا": [{"label": "كتاب الجغرافيا", "file": "geography.pdf"}],
-        "تاريخ": [{"label": "كتاب التاريخ", "file": "history.pdf"}],
-        "تربية إسلامية": [{"label": "كتاب التربية الإسلامية", "file": "Islamic.pdf"}],
-        "رياضيات": [{"label": "كتاب الرياضيات", "file": "maths.pdf"}],
-        "الحاسوب": [{"label": "كتاب الحاسوب", "file": "computer.pdf"}]
+        "جغرافيا": [
+            {"label": "كتاب الجغرافيا", "file": "geography.pdf"}
+        ],
+        "تاريخ": [
+            {"label": "كتاب التاريخ", "file": "history.pdf"}
+        ],
+        "تربية إسلامية": [
+            {"label": "كتاب التربية الإسلامية", "file": "Islamic.pdf"}
+        ],
+        "رياضيات": [
+            {"label": "كتاب الرياضيات", "file": "maths.pdf"}
+        ],
+        "الحاسوب": [
+            {"label": "كتاب الحاسوب", "file": "computer.pdf"}
+        ]
     },
     "9th_grade": {
-        "لغة عربية": [{"label": "كتاب اللغة العربية", "file": "arabic.pdf"}],
-        "لغة إنجليزية": [{"label": "كتاب اللغة الإنجليزية", "file": "english.pdf"}],
+        "لغة عربية": [
+            {"label": "كتاب اللغة العربية", "file": "arabic.pdf"}
+        ],
+        "لغة إنجليزية": [
+            {"label": "كتاب اللغة الإنجليزية", "file": "english.pdf"}
+        ],
         "العلوم": [
             {"label": "كتاب العلوم - الجزء الأول", "file": "science.pdf"},
             {"label": "كتاب العلوم - الجزء الثاني", "file": "science2.pdf"}
         ],
-        "جغرافيا": [{"label": "كتاب الجغرافيا", "file": "geography.pdf"}],
-        "تربية إسلامية": [{"label": "كتاب التربية الإسلامية", "file": "Islamic.pdf"}],
-        "رياضيات": [{"label": "كتاب الرياضيات", "file": "maths.pdf"}],
-        "الحاسوب": [{"label": "كتاب الحاسوب", "file": "computer.pdf"}]
-    },
-    "1st_secandory": {
-        "الرياضيات": [
-            {"label": "كتاب الرياضيات - الجزء الأول", "file": "math1.pdf"},
-            {"label": "كتاب الرياضيات - الجزء الثاني", "file": "math2.pdf"}
+        "جغرافيا": [
+            {"label": "كتاب الجغرافيا", "file": "geography.pdf"}
         ],
-        "الأحياء": [{"label": "كتاب الأحياء", "file": "biology.pdf"}],
-        "التربية الإسلامية": [{"label": "كتاب التربية الإسلامية", "file": "Islamic.pdf"}],
-        "النحو والصرف والإملاء": [{"label": "كتاب النحو والصرف والإملاء", "file": "NAHO.pdf"}],
-        "دراسات أدبية": [{"label": "كتاب الدراسات الأدبية", "file": "Literary.pdf"}],
-        "الكيمياء": [{"label": "كتاب الكيمياء", "file": "chemistry.pdf"}],
-        "فيزياء": [{"label": "كتاب الفيزياء", "file": "physics.pdf"}],
-        "تاريخ": [{"label": "كتاب التاريخ", "file": "history.pdf"}],
-        "الجغرافية": [{"label": "كتاب الجغرافية", "file": "geography.pdf"}],
-        "علم اجتماع": [{"label": "كتاب علم الاجتماع", "file": "Sociology.pdf"}],
-        "لغة إنجليزية": [{"label": "كتاب اللغة الإنجليزية", "file": "english.pdf"}],
-        "تقنية المعلومات": [{"label": "كتاب تقنية المعلومات", "file": "IT.pdf"}]
-    },
-    "2nd_secandory_s": {
-        "التربية الإسلامية": [{"label": "كتاب التربية الإسلامية", "file": "Islamic.pdf"}],
-        "دراسات لغوية": [{"label": "كتاب الدراسات اللغوية", "file": "Linguistic.pdf"}],
-        "دراسات أدبية": [{"label": "كتاب الدراسات الأدبية", "file": "Literary.pdf"}],
-        "الرياضيات": [{"label": "كتاب الرياضيات", "file": "math.pdf"}],
-        "تقنية المعلومات": [
-            {"label": "كتاب تقنية المعلومات 1", "file": "IT1.pdf"},
-            {"label": "كتاب تقنية المعلومات 2", "file": "IT2.pdf"}
+        "تربية إسلامية": [
+            {"label": "كتاب التربية الإسلامية", "file": "Islamic.pdf"}
         ],
-        "الأحياء": [{"label": "كتاب الأحياء", "file": "biology.pdf"}],
-        "الفيزياء": [{"label": "كتاب الفيزياء", "file": "physics.pdf"}],
-        "الإحصاء": [{"label": "كتاب الإحصاء", "file": "statistics.pdf"}],
-        "الكيمياء": [{"label": "كتاب الكيمياء", "file": "chemistry.pdf"}],
-        "لغة إنجليزية": [{"label": "كتاب اللغة الإنجليزية", "file": "english.pdf"}]
-    },
-    "2nd_secandory_L": {
-        "التربية الإسلامية": [{"label": "كتاب التربية الإسلامية", "file": "islamic.pdf"}],
-        "لغة إنجليزية": [{"label": "كتاب اللغة الإنجليزية", "file": "english.pdf"}],
-        "بلاغة": [{"label": "كتاب البلاغة", "file": "Rhetoric.pdf"}],
-        "الأدب والنصوص": [{"label": "كتاب الأدب والنصوص", "file": "Literature.pdf"}],
-        "المطالعة والإنشاء": [{"label": "كتاب المطالعة والإنشاء", "file": "Reading and writing.pdf"}],
-        "النحو والصرف والإملاء": [{"label": "كتاب النحو والصرف والإملاء", "file": "naho.pdf"}],
-        "الفلسفة": [{"label": "كتاب الفلسفة", "file": "Philosophy.pdf"}],
-        "التاريخ": [{"label": "كتاب التاريخ", "file": "history.pdf"}],
-        "الجغرافية": [{"label": "كتاب الجغرافية", "file": "geography.pdf"}],
-        "الإحصاء": [{"label": "كتاب الإحصاء", "file": "statistics.pdf"}],
-        "تقنية المعلومات": [
-            {"label": "كتاب تقنية المعلومات 1", "file": "IT1.pdf"},
-            {"label": "كتاب تقنية المعلومات 2", "file": "IT2.pdf"}
+        "رياضيات": [
+            {"label": "كتاب الرياضيات", "file": "maths.pdf"}
         ],
-        "علم الاجتماع": [{"label": "كتاب علم الاجتماع", "file": "sociology.pdf"}]
-    },
-    "3rd_secandory_S": {
-        "التربية الإسلامية": [{"label": "كتاب التربية الإسلامية", "file": "islamic.pdf"}],
-        "دراسات لغوية": [{"label": "كتاب الدراسات اللغوية", "file": "Linguistic.pdf"}],
-        "الرياضيات": [{"label": "كتاب الرياضيات", "file": "math.pdf"}],
-        "تقنية المعلومات": [{"label": "كتاب تقنية المعلومات", "file": "IT.pdf"}],
-        "الأحياء": [{"label": "كتاب الأحياء", "file": "biology.pdf"}],
-        "الفيزياء": [
-            {"label": "كتاب الفيزياء 1", "file": "physics1.pdf"},
-            {"label": "كتاب الفيزياء 2", "file": "physics2.pdf"}
-        ],
-        "الإحصاء": [{"label": "كتاب الإحصاء", "file": "statistics.pdf"}],
-        "الكيمياء": [{"label": "كتاب الكيمياء", "file": "chemistry.pdf"}],
-        "لغة إنجليزية": [{"label": "كتاب اللغة الإنجليزية", "file": "english.pdf"}]
-    },
-    "3rd_secandory_L": {
-        "التربية الإسلامية": [{"label": "كتاب التربية الإسلامية", "file": "islamic.pdf"}],
-        "لغة إنجليزية": [{"label": "كتاب اللغة الإنجليزية", "file": "english.pdf"}],
-        "الأدب والنصوص": [{"label": "كتاب الأدب والنصوص", "file": "Literature.pdf"}],
-        "المطالعة والإنشاء": [{"label": "كتاب المطالعة والإنشاء", "file": "reading&writting.pdf"}],
-        "النحو والصرف والإملاء": [{"label": "كتاب النحو والصرف والإملاء", "file": "naho.pdf"}],
-        "الفلسفة": [{"label": "كتاب الفلسفة", "file": "Philosophy.pdf"}],
-        "التاريخ": [{"label": "كتاب التاريخ", "file": "history.pdf"}],
-        "الجغرافية": [{"label": "كتاب الجغرافية", "file": "geography.pdf"}],
-        "الإحصاء": [{"label": "كتاب الإحصاء", "file": "statistics.pdf"}],
-        "تقنية المعلومات": [{"label": "كتاب تقنية المعلومات", "file": "IT.pdf"}]
+        "الحاسوب": [
+            {"label": "كتاب الحاسوب", "file": "computer.pdf"}
+        ]
     }
 }
 
@@ -392,24 +335,59 @@ def index():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        phone = request.form['phone']
+        phone = request.form['phone'].strip()
 
         if User.query.filter_by(phone=phone).first():
             flash("الرقم مسجل مسبقاً")
             return redirect(url_for('signup'))
 
+        # Send OTP
+        pin = send_otp(phone)
+        if not pin:
+            flash("فشل إرسال رمز التحقق، تأكد من الرقم الصادر")
+            return redirect(url_for('signup'))
+
+        # Store pending user data in session
+        session['pending_user'] = {
+            'full_name': request.form['full_name'],
+            'phone': phone,
+            'study_year': request.form['study_year'],
+            'password': generate_password_hash(request.form['password']),
+            'pin': pin
+        }
+        
+        return render_template('signup.html', verify_otp=True)
+
+    return render_template('signup.html', verify_otp=False)
+
+@app.route('/verify-otp', methods=['POST'])
+def verify_otp():
+    pending_user = session.get('pending_user')
+    if not pending_user:
+        flash("انتهت صلاحية الجلسة، يرجى المحاولة مرة أخرى")
+        return redirect(url_for('signup'))
+
+    otp_entered = request.form.get('otp', '').strip()
+    
+    if otp_entered == str(pending_user['pin']):
+        # Create user
         user = User(
-            full_name=request.form['full_name'],
-            phone=phone,
-            study_year=request.form['study_year'],
-            password=generate_password_hash(request.form['password'])
+            full_name=pending_user['full_name'],
+            phone=pending_user['phone'],
+            study_year=pending_user['study_year'],
+            password=pending_user['password']
         )
         db.session.add(user)
         db.session.commit()
+        
+        # Clear session
+        session.pop('pending_user', None)
+        
         login_user(user)
         return redirect(url_for('dashboard'))
-
-    return render_template('signup.html')
+    else:
+        flash("رمز التحقق غير صحيح")
+        return render_template('signup.html', verify_otp=True)
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -531,42 +509,17 @@ def ai_room():
         # Check if this is an English subject
         is_english = "english" in subject.lower() or "إنجليزي" in subject.lower()
 
-        # Check if ASSISTANT_ID is configured
-        if not ASSISTANT_ID:
-            return jsonify({"error": "خطأ في الإعدادات: ASSISTANT_ID غير موجود. تواصل مع الدعم الفني."}), 500
+        # Different prompts for English vs other subjects
+        if is_english:
+            prompt = f"""
+اشرح موضوع ({query}) في مادة ({subject}) لطلاب ({current_user.study_year}) في المنهج الليبي.
 
-        try:
-            # 1) Identify and assign the correct vector store for this user's grade
-            folder = STUDY_YEAR_REFERENCE_FOLDER.get(current_user.study_year)
-            vector_store_id = os.getenv(f"VECTOR_STORE_{folder.upper()}") if folder else None
-            
-            thread_params = {}
-            if vector_store_id:
-                thread_params["tool_resources"] = {
-                    "file_search": {
-                        "vector_store_ids": [vector_store_id]
-                    }
-                }
-
-            # 2) Create a new thread with the specific vector store resources
-            thread = client.beta.threads.create(**thread_params)
-
-            # 2) Build the user message based on subject type
-            if is_english:
-                user_message = f"""
-المادة: {subject}
-الصف: {current_user.study_year}
-السؤال: {query}
-
-⚠️ التعليمات الصارمة جداً:
+التعليمات:
 1. استعمل اللهجة الليبية البيضاء (البسيطة والمفهومة) وكأنك مدرس ليبي خبير يحبب الطالب في المادة.
 2. الشرح لازم يكون مفصل ومنظم باستعمال Markdown (عناوين، نقاط، خط عريض).
-3. ❗ ممنوع منعاً باتاً الإجابة من خارج الكتب الدراسية الليبية المرفقة. 
-4. ❗ إذا لم تجد المعلومة في الكتب المرفقة، يجب أن يكون ردك كالتالي:
-   - في خانة "explanation" اكتب فقط: "نعتذر منك، هذه المعلومة غير موجودة في المنهج الدراسي الليبي المخصص لصفك."
-   - في خانة "quiz" ضع قائمة فارغة [].
-5. بعد الشرح (إذا توفر في المنهج)، اقترح 3 أسئلة اختيار من متعدد (Quiz) للتأكد من الفهم.
-6. ⚠️ مهم جداً: الشرح يكون بالعربي، لكن الأسئلة (quiz) لازم تكون بالإنجليزي بالكامل - السؤال والخيارات كلهم بالإنجليزي بدون أي حرف عربي.
+3. استند على المنهج الدراسي الليبي والمعلومات الصحيحة.
+4. بعد الشرح، اقترح 3 أسئلة اختيار من متعدد (Quiz) للتأكد من الفهم.
+5. ⚠️ مهم جداً: الشرح يكون بالعربي، لكن الأسئلة (quiz) لازم تكون بالإنجليزي بالكامل - السؤال والخيارات كلهم بالإنجليزي بدون أي حرف عربي.
 
 رد عليا بصيغة JSON فقط كالتالي:
 {{
@@ -577,21 +530,17 @@ def ai_room():
  ]
 }}
 """
-            else:
-                user_message = f"""
-المادة: {subject}
-الصف: {current_user.study_year}
-السؤال: {query}
+            system_message = "أنت 'افهمها وفهمني'، مدرس ليبي عبقري ومحبوب، تشرح اللغة الإنجليزية بطريقة مشوقة وبسيطة جداً بالعامية الليبية. الشرح يكون بالعربي، لكن الأسئلة (quiz) لازم تكون بالإنجليزي بالكامل."
+        else:
+            prompt = f"""
+اشرح موضوع ({query}) في مادة ({subject}) لطلاب ({current_user.study_year}) في المنهج الليبي.
 
-⚠️ التعليمات الصارمة جداً:
+التعليمات:
 1. استعمل اللهجة الليبية البيضاء (البسيطة والمفهومة) وكأنك مدرس ليبي خبير يحبب الطالب في المادة.
 2. الشرح لازم يكون مفصل ومنظم باستعمال Markdown (عناوين، نقاط، خط عريض).
-3. ❗ ممنوع منعاً باتاً الإجابة من خارج الكتب الدراسية الليبية المرفقة.
-4. ❗ إذا لم تجد المعلومة في الكتب المرفقة، يجب أن يكون ردك كالتالي:
-   - في خانة "explanation" اكتب فقط: "نعتذر منك، هذه المعلومة غير موجودة في المنهج الدراسي الليبي المخصص لصفك."
-   - في خانة "quiz" ضع قائمة فارغة [].
-5. بعد الشرح (إذا توفر في المنهج)، اقترح 3 أسئلة اختيار من متعدد (Quiz) للتأكد من الفهم.
-6. مهم: اكتب الشرح بالعربي، لكن خلي الرموز الرياضية والعلمية بالإنجليزي (مثل: x, y, =, +, -, ×, ÷, etc.)
+3. استند على المنهج الدراسي الليبي والمعلومات الصحيحة.
+4. بعد الشرح، اقترح 3 أسئلة اختيار من متعدد (Quiz) للتأكد من الفهم.
+5. مهم: اكتب الشرح بالعربي، لكن خلي الرموز الرياضية والعلمية بالإنجليزي (مثل: x, y, =, +, -, ×, ÷, etc.)
 
 رد عليا بصيغة JSON فقط كالتالي:
 {{
@@ -602,73 +551,36 @@ def ai_room():
  ]
 }}
 """
+            system_message = "أنت 'افهمها وفهمني'، مدرس ليبي عبقري ومحبوب، تشرح المنهج الليبي بطريقة مشوقة وبسيطة جداً بالعامية الليبية. تكتب الشرح بالعربي لكن تخلي الرموز الرياضية والعلمية بالإنجليزي."
 
-            # 3) Send the user message
-            client.beta.threads.messages.create(
-                thread_id=thread.id,
-                role="user",
-                content=user_message
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"}
             )
 
-            # 4) Run the assistant
-            # In SDK v2, tool_resources are set at the thread level, not the run level
-            run = client.beta.threads.runs.create(
-                thread_id=thread.id,
-                assistant_id=ASSISTANT_ID
-            )
-
-            # 5) Wait until completion
-            while run.status in ("queued", "in_progress"):
-                sleep(1)
-                run = client.beta.threads.runs.retrieve(
-                    thread_id=thread.id,
-                    run_id=run.id
-                )
-
-            if run.status != "completed":
-                return jsonify({"error": "فشل توليد الشرح"}), 500
-
-            # 6) Read assistant reply
-            messages = client.beta.threads.messages.list(thread_id=thread.id)
-            answer = messages.data[0].content[0].text.value
-
-            # 7) Try to parse as JSON for quiz, fallback to plain text
-            json_text = answer.strip()
-            if json_text.startswith("```"):
-                # Remove starting backticks and optional language identifier
-                json_text = re.sub(r'^```(?:json)?\s*', '', json_text)
-                # Remove ending backticks
-                json_text = re.sub(r'\s*```$', '', json_text)
-
-            try:
-                ai_data = json.loads(json_text)
-                explanation = ai_data.get("explanation", answer)
-                quiz = ai_data.get("quiz", [])
-            except json.JSONDecodeError:
-                # If not JSON, treat entire response as explanation
-                explanation = answer
-                quiz = []
-
-            # 8) Save explanation to DB
+            ai_data = json.loads(response.choices[0].message.content)
+            
+            # Save explanation to DB
             exp = Explanation(
                 title=f"{subject}: {query}",
                 subject=subject,
-                content=explanation,
+                content=ai_data["explanation"],
                 user_id=current_user.id
             )
             db.session.add(exp)
 
-            # 9) Update user stats
+            # Update user stats
             current_user.ai_credits -= 5
             current_user.points += 10
             current_user.study_hours += 0.25
 
             db.session.commit()
-            
-            return jsonify({
-                "explanation": explanation,
-                "quiz": quiz
-            })
+            return jsonify(ai_data)
 
         except Exception as e:
             print(f"AI Error: {e}")
@@ -713,20 +625,6 @@ def api_explanations():
         }
         for e in explanations
     ])
-
-@app.route('/api/delete-explanation/<int:explanation_id>', methods=['POST'])
-@login_required
-def delete_explanation(explanation_id):
-    exp = db.session.get(Explanation, explanation_id)
-    if not exp:
-        return jsonify({"success": False, "error": "الشرح غير موجود"}), 404
-    
-    if exp.user_id != current_user.id:
-        return jsonify({"success": False, "error": "غير مصرح لك بحذف هذا الشرح"}), 403
-    
-    db.session.delete(exp)
-    db.session.commit()
-    return jsonify({"success": True})
 
 @app.route('/logout')
 def logout():
