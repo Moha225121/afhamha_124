@@ -557,6 +557,7 @@ def admin_dashboard():
         return redirect(url_for('dashboard'))
 
     total_users = User.query.count()
+    total_ai_requests = Explanation.query.count()
     phone_query = request.args.get('phone', '').strip()
     name_query = request.args.get('name', '').strip()
     found_users = []
@@ -567,10 +568,15 @@ def admin_dashboard():
         if name_query:
             query = query.filter(User.full_name.ilike(f"%{name_query}%"))
         found_users = query.order_by(User.joined_at.desc()).limit(50).all()
+        
+        # Add AI request count for each user
+        for u in found_users:
+            u.ai_request_count = Explanation.query.filter_by(user_id=u.id).count()
 
     return render_template(
         'admin_dashboard.html',
         total_users=total_users,
+        total_ai_requests=total_ai_requests,
         phone_query=phone_query,
         name_query=name_query,
         found_users=found_users
