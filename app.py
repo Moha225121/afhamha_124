@@ -73,7 +73,38 @@ def run_auto_migration():
                     except Exception as l_ex:
                         print(f">>> FAIL: CREATE TABLE lesson: {l_ex}")
                 else:
-                    print(f">>> Skipping PG migrations (non-PG URL: {database_url[:20]}...)")
+                    print(f">>> Detected Non-PostgreSQL (SQLite/Other). Running fallback migration check...")
+                    # Fallback for SQLite (Adding columns one by one safely)
+                    columns_to_add = [
+                        ('joined_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'),
+                        ('points', 'INTEGER DEFAULT 0'),
+                        ('study_hours', 'FLOAT DEFAULT 0.0'),
+                        ('is_verified', 'BOOLEAN DEFAULT FALSE'),
+                    ]
+                    for col_name, col_type in columns_to_add:
+                        try:
+                            # Check if column exists first
+                            cursor = conn.execute(text(f"PRAGMA table_info('user')"))
+                            existing_cols = [row[1] for row in cursor.fetchall()]
+                            if col_name not in existing_cols:
+                                conn.execute(text(f'ALTER TABLE "user" ADD COLUMN {col_name} {col_type};'))
+                                conn.commit()
+                                print(f">>> OK: Added {col_name} to user table")
+                        except Exception as q_ex:
+                            print(f">>> SKIP: {col_name} check failed: {q_ex}")
+                    
+                    # Also check explanation table
+                    try:
+                        cursor = conn.execute(text(f"PRAGMA table_info('explanation')"))
+                        existing_cols = [row[1] for row in cursor.fetchall()]
+                        if 'subject' not in existing_cols:
+                            conn.execute(text('ALTER TABLE explanation ADD COLUMN subject VARCHAR(100);'))
+                            conn.commit()
+                        if 'created_at' not in existing_cols:
+                            conn.execute(text('ALTER TABLE explanation ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;'))
+                            conn.commit()
+                    except:
+                        pass
         print(">>> Startup Migration Check Completed Successfully")
     except Exception as e:
         print(f">>> CRITICAL: Startup Migration Failed: {e}")
