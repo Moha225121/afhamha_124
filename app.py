@@ -31,41 +31,52 @@ db = SQLAlchemy(app)
 
 # ---------------- AUTO MIGRATION ----------------
 def run_auto_migration():
-    print("Running startup migration check...")
+    print(">>> Starting Startup Migration Check")
     try:
         from sqlalchemy import text
-        with db.engine.connect() as conn:
-            # Aggressive PostgreSQL check
-            if database_url.startswith("postgresql"):
-                queries = [
-                    'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;',
-                    'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0;',
-                    'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS study_hours FLOAT DEFAULT 0.0;',
-                    'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;',
-                    'ALTER TABLE explanation ADD COLUMN IF NOT EXISTS subject VARCHAR(100);',
-                    'ALTER TABLE explanation ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;'
-                ]
-                for q in queries:
+        with app.app_context():
+            with db.engine.connect() as conn:
+                # Aggressive PostgreSQL check
+                is_pg = database_url.startswith("postgresql") or "db.ondigitalocean.app" in database_url
+                if is_pg:
+                    print(">>> Detected PostgreSQL environment. Running ALTER commands...")
+                    queries = [
+                        'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;',
+                        'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0;',
+                        'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS study_hours FLOAT DEFAULT 0.0;',
+                        'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE;',
+                        'ALTER TABLE explanation ADD COLUMN IF NOT EXISTS subject VARCHAR(100);',
+                        'ALTER TABLE explanation ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;'
+                    ]
+                    for q in queries:
+                        try:
+                            # Using execution_options(isolation_level="AUTOCOMMIT") to ensure each ALTER runs
+                            conn.execute(text(q))
+                            conn.commit()
+                            print(f">>> OK: {q[:40]}...")
+                        except Exception as q_ex:
+                            print(f">>> SKIP/FAIL: {q[:40]}... Error: {q_ex}")
+                    
                     try:
-                        conn.execute(text(q))
+                        conn.execute(text("""
+                            CREATE TABLE IF NOT EXISTS lesson (
+                                id SERIAL PRIMARY KEY,
+                                study_year VARCHAR(50) NOT NULL,
+                                subject VARCHAR(100) NOT NULL,
+                                category VARCHAR(100),
+                                lesson_name VARCHAR(255) NOT NULL,
+                                description TEXT
+                            );
+                        """))
                         conn.commit()
-                    except:
-                        pass
-                
-                conn.execute(text("""
-                    CREATE TABLE IF NOT EXISTS lesson (
-                        id SERIAL PRIMARY KEY,
-                        study_year VARCHAR(50) NOT NULL,
-                        subject VARCHAR(100) NOT NULL,
-                        category VARCHAR(100),
-                        lesson_name VARCHAR(255) NOT NULL,
-                        description TEXT
-                    );
-                """))
-                conn.commit()
-        print("Startup migration check completed.")
+                        print(">>> OK: CREATE TABLE lesson")
+                    except Exception as l_ex:
+                        print(f">>> FAIL: CREATE TABLE lesson: {l_ex}")
+                else:
+                    print(f">>> Skipping PG migrations (non-PG URL: {database_url[:20]}...)")
+        print(">>> Startup Migration Check Completed Successfully")
     except Exception as e:
-        print(f"Startup migration failed: {e}")
+        print(f">>> CRITICAL: Startup Migration Failed: {e}")
 
 run_auto_migration()
 
@@ -74,7 +85,12 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'signup'
 
 # ---------------- OPENAI ----------------
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if openai_api_key:
+    client = OpenAI(api_key=openai_api_key)
+else:
+    client = None
+    print("Warning: OPENAI_API_KEY not found. AI features will be disabled.")
 
 # ---------------- ADMIN ----------------
 def _get_admin_phones():
@@ -613,6 +629,9 @@ def ai_room():
 
         if current_user.ai_credits <= 0:
             return jsonify({"error": "رصيدك كمل. اشترك باش تزيد نقاط"}), 403
+
+        if not client:
+            return jsonify({"error": "خدمات الذكاء الاصطناعي معطلة حالياً. يرجى التواصل مع الإدارة."}), 500
 
         data = request.json
         subject = data.get("subject")
