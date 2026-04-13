@@ -108,6 +108,52 @@
         <p class="mt-6 text-sm font-bold text-red-500">لم يتم العثور على نتائج</p>
       {% endif %}
     {% endif %}
+  <div class="mt-12 bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm transition-all duration-300">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-xl font-black text-slate-900 italic">أحدث طلبات الذكاء الإصطناعي</h3>
+      <div class="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl">
+        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+        <span class="text-xs font-bold text-slate-500">مباشر الآن</span>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-right">
+        <thead>
+          <tr class="border-b border-slate-50">
+            <th class="pb-4 pt-1 font-bold text-slate-400 text-sm italic">الموضوع</th>
+            <th class="pb-4 pt-1 font-bold text-slate-400 text-sm italic">بواسطة</th>
+            <th class="pb-4 pt-1 font-bold text-slate-400 text-sm italic">التاريخ</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-50">
+          {% for exp, user in recent_requests %}
+          <tr class="group hover:bg-slate-50/50 transition-colors">
+            <td class="py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">📖</div>
+                <p class="font-bold text-slate-700 text-sm tracking-tight">{{ exp.title }}</p>
+              </div>
+            </td>
+            <td class="py-4">
+              <div class="flex flex-col">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px]">👤</div>
+                  <p class="font-bold text-slate-900 text-sm">{{ user.full_name }}</p>
+                </div>
+                <span class="text-[10px] text-slate-400 font-medium mr-8">{{ user.phone }}</span>
+              </div>
+            </td>
+            <td class="py-4">
+              <div class="flex items-center gap-2 text-slate-400">
+                <span class="text-xs font-medium tabular-nums">{{ exp.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 {% endblock %}

@@ -622,13 +622,23 @@ def admin_dashboard():
             last_order = Explanation.query.filter_by(user_id=u.id).order_by(Explanation.created_at.desc()).first()
             u.last_order_date = last_order.created_at.strftime('%Y-%m-%d %H:%M') if last_order else '—'
 
+    # Fetch recent AI requests across all users
+    recent_requests = (
+        db.session.query(Explanation, User)
+        .join(User, Explanation.user_id == User.id)
+        .order_by(Explanation.created_at.desc())
+        .limit(20)
+        .all()
+    )
+
     return render_template(
         'admin_dashboard.html',
         total_users=total_users,
         total_ai_requests=total_ai_requests,
         phone_query=phone_query,
         name_query=name_query,
-        found_users=found_users
+        found_users=found_users,
+        recent_requests=recent_requests
     )
 
 @app.route('/admin/delete/<int:user_id>', methods=['POST'])
