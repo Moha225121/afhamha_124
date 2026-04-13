@@ -616,9 +616,11 @@ def admin_dashboard():
             query = query.filter(User.full_name.ilike(f"%{name_query}%"))
         found_users = query.order_by(User.joined_at.desc()).limit(50).all()
         
-        # Add AI request count for each user
+        # Add AI request count and last order date for each user
         for u in found_users:
             u.ai_request_count = Explanation.query.filter_by(user_id=u.id).count()
+            last_order = Explanation.query.filter_by(user_id=u.id).order_by(Explanation.created_at.desc()).first()
+            u.last_order_date = last_order.created_at.strftime('%Y-%m-%d %H:%M') if last_order else '—'
 
     return render_template(
         'admin_dashboard.html',

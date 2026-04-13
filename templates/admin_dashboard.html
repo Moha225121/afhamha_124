@@ -67,7 +67,7 @@
         <div class="mt-6 space-y-4">
           {% for u in found_users %}
             <div class="border border-slate-100 rounded-2xl p-6 bg-slate-50">
-              <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div>
                   <p class="text-xs font-bold text-slate-400 mb-1">الاسم</p>
                   <p class="font-bold text-slate-900">{{ u.full_name or '—' }}</p>
@@ -81,10 +81,14 @@
                   <p class="font-mono text-xs text-slate-700 break-all">{{ u.password[:15] }}... </p>
                 </div>
                 <div>
-                  <p class="text-xs font-bold text-slate-400 mb-1">طلبات الذكاء الاصطناعي</p>
+                  <p class="text-xs font-bold text-slate-400 mb-1">طلبات الذكاء الإصطناعي</p>
                   <div class="flex items-center gap-2">
                       <span class="p-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold">{{ u.ai_request_count }} طلب</span>
                   </div>
+                </div>
+                <div>
+                  <p class="text-xs font-bold text-slate-400 mb-1">تاريخ آخر طلب</p>
+                  <p class="font-bold text-slate-900 text-xs">{{ u.last_order_date }}</p>
                 </div>
                 <div class="flex items-end">
                   <form method="POST" action="{{ url_for('admin_delete_user', user_id=u.id) }}" class="w-full">
