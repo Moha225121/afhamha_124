@@ -1,12 +1,12 @@
 {% extends "base_auth.html" %}
 {% block content %}
 
-<div class="max-w-7xl mx-auto h-auto lg:h-[calc(100vh-120px)] flex flex-col lg:flex-row gap-6 lg:gap-8">
+<div class="max-w-7xl mx-auto h-auto lg:h-[calc(100vh-120px)] flex flex-col lg:flex-row gap-4 lg:gap-8">
 
   <!-- ================= LEFT SIDEBAR (History) ================= -->
-  <aside class="w-full lg:w-80 flex flex-col gap-6 order-2 lg:order-1">
+  <aside class="w-full lg:w-80 flex flex-col gap-4 lg:gap-6 order-2 lg:order-1">
     <div
-      class="bg-white rounded-[2rem] p-6 shadow-sm flex flex-col h-[400px] lg:h-full overflow-hidden border border-slate-50">
+      class="bg-white rounded-[2rem] p-4 lg:p-6 shadow-sm flex flex-col h-[320px] lg:h-full overflow-hidden border border-slate-50">
       <div class="flex items-center justify-between mb-6">
         <h3 class="font-black text-slate-900 flex items-center gap-2">
           <span class="text-xl">💬</span> الشروحات السابقة
@@ -22,7 +22,7 @@
     </div>
 
     <!-- Stats Card -->
-    <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-50">
+    <div class="bg-white rounded-[2rem] p-4 lg:p-6 shadow-sm border border-slate-50">
       <div class="flex items-center gap-4">
         <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-2xl">💎</div>
         <div>
@@ -36,11 +36,11 @@
 
   <!-- ================= MAIN CHAT AREA ================= -->
   <main
-    class="w-full lg:flex-1 h-[600px] lg:h-full flex flex-col bg-white rounded-[2.5rem] shadow-sm overflow-hidden border border-slate-100 relative order-1 lg:order-2">
+    class="w-full lg:flex-1 h-[calc(100vh-96px)] min-h-[620px] lg:h-full flex flex-col bg-white rounded-[2rem] lg:rounded-[2.5rem] shadow-sm overflow-hidden border border-slate-100 relative order-1 lg:order-2">
 
     <!-- Chat Header -->
     <div
-      class="px-6 lg:px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-white/80 backdrop-blur-md z-10">
+      class="px-4 lg:px-8 py-4 lg:py-5 border-b border-slate-100 flex items-center justify-between bg-white/80 backdrop-blur-md z-10">
       <div class="flex items-center gap-4">
         <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-xl">✨</div>
         <div>
@@ -65,13 +65,13 @@
     </div>
 
     <!-- Chat Messages -->
-    <div id="chatMessages" class="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6 custom-scrollbar bg-slate-50/30">
+    <div id="chatMessages" class="flex-1 overflow-y-auto p-4 lg:p-8 space-y-5 lg:space-y-6 custom-scrollbar bg-slate-50/30">
       <!-- Welcome Message -->
       <div class="flex gap-4">
         <div class="w-8 h-8 bg-primary rounded-lg flex-shrink-0 flex items-center justify-center text-white text-sm">🤖
         </div>
         <div
-          class="bg-white p-5 rounded-[2rem] rounded-tr-none shadow-sm border border-slate-100 max-w-[90%] lg:max-w-[80%]">
+          class="bg-white p-4 lg:p-5 rounded-[2rem] rounded-tr-none shadow-sm border border-slate-100 max-w-[calc(100%-3rem)] lg:max-w-[80%]">
           <p class="text-sm text-slate-600 leading-relaxed">
             مرحباً بيك في غرفة الذكاء الاصطناعي! 👋 <br><br>
             اختار المادة اللي تبيها من فوق، واكتب اسم الدرس أو السؤال اللي تبي تفهمه، وأنا حنشرحهولك باللهجة الليبية
@@ -99,7 +99,7 @@
     </div>
 
     <!-- Input Area -->
-    <div class="p-4 lg:p-6 bg-white border-t border-slate-100">
+    <div class="p-3 lg:p-6 bg-white border-t border-slate-100">
       <div class="flex gap-3 lg:gap-4 mb-3 lg:mb-4">
         <div class="flex-1 relative">
           <select id="subject" onchange="updateSubjectDisplay()"
@@ -125,14 +125,22 @@
         <div id="referencesList" class="space-y-2"></div>
       </div>
 
-      <div class="relative flex items-center">
+      <div class="mb-4 bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-7 h-7 bg-secondary/10 rounded-lg flex items-center justify-center text-sm">📚</div>
+          <p class="text-xs font-black text-slate-700">منهج السنة الحالية</p>
+        </div>
+        <div id="curriculumOverview" class="space-y-3 max-h-72 overflow-y-auto pr-1 custom-scrollbar"></div>
+      </div>
+
+      <div class="relative flex flex-col sm:flex-row sm:items-center gap-2">
         <input id="question" type="text" placeholder="اكتب اسم الدرس هنا..."
           onkeypress="if(event.key === 'Enter') askAI()"
-          class="w-full pl-16 lg:pl-20 pr-4 lg:pr-6 py-3.5 lg:py-4 bg-slate-900 text-white rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all font-medium placeholder:text-slate-500 text-sm">
+          class="w-full px-4 sm:pl-20 lg:pl-24 lg:pr-6 py-3.5 lg:py-4 bg-slate-900 text-white rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all font-medium placeholder:text-slate-500 text-sm">
 
         <button id="askBtn" onclick="askAI()"
-          class="absolute left-1.5 px-4 lg:px-6 py-2 lg:py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-all active:scale-95 flex items-center gap-2 shadow-lg shadow-primary/20 text-xs lg:text-sm">
-          <span class="hidden sm:inline">اسأل</span>
+          class="w-full sm:w-auto sm:absolute sm:left-1.5 px-4 lg:px-6 py-3 sm:py-2 lg:py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-primary/20 text-xs lg:text-sm">
+          <span>اسأل</span>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7" />
           </svg>
@@ -147,7 +155,7 @@
   <!-- ================= RIGHT SIDEBAR (Quiz) ================= -->
   <aside class="w-full lg:w-80 flex flex-col order-3">
     <div id="quizContainer"
-      class="bg-white rounded-[2rem] p-6 shadow-sm flex-1 flex flex-col min-h-[400px] lg:h-full lg:overflow-hidden border border-slate-50 relative">
+      class="bg-white rounded-[2rem] p-4 lg:p-6 shadow-sm flex-1 flex flex-col min-h-[400px] lg:h-full lg:overflow-hidden border border-slate-50 relative">
       <div class="flex items-center gap-3 mb-6">
         <div class="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center text-xl">📝</div>
         <h3 class="font-black text-slate-900">اختبر فهمك</h3>
@@ -210,15 +218,40 @@
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script type="application/json" id="references-data">{{ references_map | tojson | safe }}</script>
+<script type="application/json" id="curriculum-data">{{ curriculum_overview | tojson | safe }}</script>
 <script>
   let correctAnswers = [];
-  const referencesMap = {{ references_map | tojson | safe }};
+  const referencesMap = JSON.parse(document.getElementById("references-data").textContent || "{}");
+  const curriculumOverview = JSON.parse(document.getElementById("curriculum-data").textContent || "[]");
 
   function updateSubjectDisplay() {
     const select = document.getElementById("subject");
     const display = document.getElementById("currentSubjectDisplay");
     display.innerText = "شرح: " + select.value;
     renderReferences();
+  }
+
+  function renderCurriculumOverview() {
+    const box = document.getElementById("curriculumOverview");
+    if (!curriculumOverview.length) {
+      box.innerHTML = "<p class='text-[10px] text-slate-400 font-bold italic'>لا توجد كتب مرفقة لهذه السنة حالياً.</p>";
+      return;
+    }
+
+    box.innerHTML = curriculumOverview.map(section => `
+      <div class="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+        <p class="text-[11px] font-black text-slate-800 mb-2">${section.subject}</p>
+        <div class="flex flex-wrap gap-2">
+          ${section.books.map(book => `
+            <a href="${book.url}" download class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 hover:border-primary/30 hover:bg-primary/5 transition">
+              <span class="text-[10px] font-bold text-slate-700">${book.label}</span>
+              <span class="text-[10px] text-primary font-black">تحميل</span>
+            </a>
+          `).join("")}
+        </div>
+      </div>
+    `).join("");
   }
 
   function renderReferences() {
@@ -290,6 +323,9 @@
       });
   }
 
+  renderCurriculumOverview();
+  renderReferences();
+
   function showHistoryItem(item) {
     addMessage("🤖", item.content, "bot");
     document.getElementById("quiz").innerHTML = `
@@ -314,8 +350,8 @@
 
     div.innerHTML = `
     ${type === "bot" ? `<div class="w-8 h-8 bg-primary rounded-lg flex-shrink-0 flex items-center justify-center text-white text-sm">${icon}</div>` : ""}
-    <div class="${bgClass} p-5 max-w-[85%]">
-      <div class="prose prose-sm ${textClass} max-w-none leading-relaxed prose-p:mb-4 last:prose-p:mb-0">
+    <div class="${bgClass} p-4 lg:p-5 max-w-[calc(100%-3rem)] lg:max-w-[85%] min-w-0">
+      <div class="prose prose-sm ${textClass} max-w-none leading-relaxed prose-p:mb-4 last:prose-p:mb-0 break-words">
         ${htmlContent}
       </div>
     </div>
@@ -358,19 +394,19 @@
         data.quiz.forEach((q, i) => {
           correctAnswers.push(q.correct);
           quizHtml += `
-        <div class="group bg-slate-50 rounded-[2rem] p-6 border border-slate-100/50 hover:bg-white hover:border-accent/20 transition-all duration-300">
-          <div class="flex gap-3 mb-4">
-            <span class="w-6 h-6 bg-accent/10 text-accent rounded-full flex items-center justify-center text-[10px] font-black">${i + 1}</span>
-            <strong class="text-sm text-slate-800 leading-snug font-black">${q.question}</strong>
+        <div class="group bg-slate-50 rounded-[2rem] p-4 sm:p-6 border border-slate-100/50 hover:bg-white hover:border-accent/20 transition-all duration-300 min-w-0">
+          <div class="flex items-start gap-3 mb-4 min-w-0">
+            <span class="w-6 h-6 bg-accent/10 text-accent rounded-full flex flex-shrink-0 items-center justify-center text-[10px] font-black">${i + 1}</span>
+            <strong class="min-w-0 flex-1 text-sm text-slate-800 leading-snug font-black break-words">${q.question}</strong>
           </div>
-          <div class="space-y-2 mr-9">`;
+          <div class="space-y-2 sm:mr-9">`;
 
           q.options.forEach((op, idx) => {
             const id = `q${i}_${idx}`;
             quizHtml += `
-          <label for="${id}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200/50 hover:bg-white hover:border-primary/30 cursor-pointer transition-all group/option active:scale-[0.98]">
-            <input type="radio" id="${id}" name="q${i}" value="${idx}" class="w-4 h-4 text-primary focus:ring-primary border-slate-300">
-            <span class="text-xs font-bold text-slate-600 group-hover/option:text-slate-900 transition-colors">${op}</span>
+          <label for="${id}" class="flex items-start gap-3 p-3 rounded-xl border border-slate-200/50 hover:bg-white hover:border-primary/30 cursor-pointer transition-all group/option active:scale-[0.98] min-w-0">
+            <input type="radio" id="${id}" name="q${i}" value="${idx}" class="mt-0.5 w-4 h-4 flex-shrink-0 text-primary focus:ring-primary border-slate-300">
+            <span class="min-w-0 flex-1 text-xs font-bold leading-relaxed text-slate-600 group-hover/option:text-slate-900 transition-colors break-words">${op}</span>
           </label>`;
           });
           quizHtml += `</div></div>`;
